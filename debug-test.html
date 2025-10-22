@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OTP Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+        button { padding: 10px 15px; margin: 5px; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>OTP Login Debug Test</h1>
+    
+    <div class="debug-section">
+        <h3>Test Mobile Number Input</h3>
+        <input type="text" id="mobileInput" placeholder="Enter 10-digit mobile number" maxlength="10">
+        <button onclick="testMobileValidation()">Test Validation</button>
+        <div id="mobileResult"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Test Navigation</h3>
+        <button onclick="testNavigation()">Test Navigation to Verification</button>
+        <div id="navigationResult"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Test Local Storage</h3>
+        <button onclick="testStorage()">Test Storage Functions</button>
+        <div id="storageResult"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Debug Information</h3>
+        <div id="debugInfo"></div>
+    </div>
+
+    <script>
+        function testMobileValidation() {
+            const mobile = document.getElementById('mobileInput').value;
+            const result = document.getElementById('mobileResult');
+            
+            if (!mobile) {
+                result.innerHTML = '<span class="error">Please enter mobile number</span>';
+                return false;
+            }
+            
+            if (mobile.length !== 10) {
+                result.innerHTML = '<span class="error">Please enter valid 10-digit mobile number</span>';
+                return false;
+            }
+            
+            if (!/^[6-9]\d{9}$/.test(mobile)) {
+                result.innerHTML = '<span class="error">Invalid mobile number format</span>';
+                return false;
+            }
+            
+            result.innerHTML = '<span class="success">Mobile number is valid!</span>';
+            return true;
+        }
+
+        function testNavigation() {
+            const mobile = document.getElementById('mobileInput').value;
+            const result = document.getElementById('navigationResult');
+            
+            if (!testMobileValidation()) {
+                result.innerHTML = '<span class="error">Fix mobile number first</span>';
+                return;
+            }
+            
+            // Simulate navigation
+            const queryParams = new URLSearchParams();
+            queryParams.set('mobile', mobile);
+            const verificationUrl = `/verification?${queryParams.toString()}`;
+            
+            result.innerHTML = `
+                <span class="success">Navigation would work!</span><br>
+                <strong>URL:</strong> ${verificationUrl}<br>
+                <strong>Mobile:</strong> ${mobile}
+            `;
+        }
+
+        function testStorage() {
+            const result = document.getElementById('storageResult');
+            
+            try {
+                // Test localStorage
+                const testKey = 'test_key';
+                const testValue = { mobile: '9876543210', timestamp: Date.now() };
+                
+                localStorage.setItem(testKey, JSON.stringify(testValue));
+                const retrieved = JSON.parse(localStorage.getItem(testKey));
+                
+                if (retrieved && retrieved.mobile === testValue.mobile) {
+                    result.innerHTML = '<span class="success">Local Storage is working correctly!</span>';
+                } else {
+                    result.innerHTML = '<span class="error">Local Storage test failed</span>';
+                }
+                
+                localStorage.removeItem(testKey);
+            } catch (error) {
+                result.innerHTML = `<span class="error">Local Storage error: ${error.message}</span>`;
+            }
+        }
+
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.innerHTML = `
+                <strong>Current URL:</strong> ${window.location.href}<br>
+                <strong>User Agent:</strong> ${navigator.userAgent}<br>
+                <strong>Local Storage Available:</strong> ${typeof(Storage) !== "undefined" ? 'Yes' : 'No'}<br>
+                <strong>Console Available:</strong> ${typeof(console) !== "undefined" ? 'Yes' : 'No'}<br>
+                <strong>Current Time:</strong> ${new Date().toLocaleString()}
+            `;
+        }
+
+        // Update debug info on load
+        updateDebugInfo();
+        setInterval(updateDebugInfo, 5000);
+    </script>
+</body>
+</html>

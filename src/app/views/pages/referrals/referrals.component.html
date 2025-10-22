@@ -1,0 +1,391 @@
+<!-- referrals.component.html -->
+<div class="referrals-container">
+  <!-- Header Section -->
+  <div class="referrals-header">
+    <h1 class="page-title">Connection</h1>
+    
+    <!-- Tabs and Add Button -->
+    <div class="header-controls">
+      <div class="tab-container">
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'given'"
+          (click)="switchTab('given')">
+          Given
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'received'"
+          (click)="switchTab('received')">
+          Received
+        </button>
+      </div>
+      
+      <button class="add-btn" (click)="openConnectionSlip()">
+        <i class="plus-icon">+</i>
+        Add
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Header -->
+  <div class="table-header">
+    <div class="header-cell name-col">Name</div>
+    <div class="header-cell connection-col">Connection</div>
+    <div class="header-cell type-col">Type</div>
+    <div class="header-cell rating-col">Rating</div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading referrals...</p>
+  </div>
+
+  <!-- Referrals List -->
+  <div *ngIf="!isLoading" class="referrals-list">
+    <div 
+      *ngFor="let referral of currentReferrals" 
+      class="referral-row">
+      
+      <!-- Name Column -->
+      <div class="cell name-cell">
+        <div class="user-info">
+          <img 
+            [src]="imageUrl+referral.giver_id?.profilePic || 'assets/images/placeholder-image.png'"
+            [alt]="activeTab === 'given' ? getReceiverName(referral) : referral.giver_id?.name"
+            class="user-avatar"
+         onerror="this.src='assets/images/placeholder-image.png'">
+          <span class="user-name">
+            {{ activeTab === 'given' ? getReceiverName(referral) : referral.giver_id?.name }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Connection Column -->
+      <div class="cell connection-cell">
+        <span class="connection-name">
+          {{ getConnectionName(referral) }}
+        </span>
+      </div>
+
+      <!-- Type Column -->
+      <div class="cell type-cell">
+        <span class="type-badge" [class]="referral.referral_type">
+          {{ referral.referral_type | titlecase }}
+        </span>
+      </div>
+
+      <!-- Rating Column -->
+      <div class="cell rating-cell">
+        <div class="rating-stars">
+          <span 
+            *ngFor="let star of getRatingStars(referral.rating)" 
+            class="star" 
+            [class.filled]="star === 'filled'">
+            ★
+          </span>
+          <span class="rating-value">{{ referral.rating }}.0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="currentReferrals.length === 0" class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h3>No {{ activeTab }} referrals found</h3>
+      <p>{{ activeTab === 'given' ? 'Start creating referrals by clicking the Add button' : 'You haven\'t received any referrals yet' }}</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && currentReferrals.length > 0" class="pagination-container">
+    <div class="pagination">
+      <!-- Previous Button -->
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage <= 1"
+        (click)="goToPage(currentPage - 1)">
+        <span class="arrow">‹</span>
+      </button>
+
+      <!-- Page Numbers -->
+      <button 
+        *ngFor="let page of paginationPages"
+        class="pagination-btn"
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)">
+        {{ page }}
+      </button>
+
+      <!-- Next Button -->
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage >= totalPages"
+        (click)="goToPage(currentPage + 1)">
+        <span class="arrow">›</span>
+      </button>
+    </div>
+    
+    <div class="pagination-info">
+      Page {{ currentPage }} of {{ totalPages }}
+    </div>
+  </div>
+</div>
+
+<!-- Connection Slip Modal -->
+<div *ngIf="showConnectionSlip" class="modal-overlay" (click)="closeConnectionSlip()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Connection Slip</h2>
+      <button class="close-btn" (click)="closeConnectionSlip()">
+        <span>×</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="connectionSlipForm" (ngSubmit)="onSubmitConnectionSlip()">
+        
+        <!-- Member Type Selection -->
+        <div class="form-group">
+          <label class="form-label">
+            Is the member In - Chapter or Cross - Chapter? <span class="required">*</span>
+          </label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input 
+                type="radio" 
+                value="inside" 
+                (change)="onReferralTypeChange('inside')"
+                [checked]="selectedReferralType === 'inside'">
+              <span class="radio-text">In - Chapter</span>
+            </label>
+            <label class="radio-option">
+              <input 
+                type="radio" 
+                value="outside" 
+                (change)="onReferralTypeChange('outside')"
+                [checked]="selectedReferralType === 'outside'">
+              <span class="radio-text">Cross - Chapter</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Member Selection -->
+        <div class="form-group">
+          <label class="form-label">
+            Select Member <span class="required">*</span>
+          </label>
+          <div class="searchable-dropdown">
+            <input 
+              type="text" 
+              #memberSearch 
+              class="form-input search-input"
+              placeholder="Search and select a member..."
+              (input)="onMemberSearch($event)"
+              (focus)="onMemberFocus()"
+              (blur)="onMemberBlur()"
+              [value]="selectedMemberDisplay">
+            <div class="dropdown-list" [class.show]="showMemberDropdown">
+              <div 
+                *ngFor="let user of filteredUsers" 
+                class="dropdown-item"
+                (mousedown)="selectMember(user)">
+                {{ user.name }} - {{ user.chapter_name }}
+              </div>
+              <div *ngIf="filteredUsers.length === 0 && memberSearchTerm" class="dropdown-item no-results">
+                No members found matching "{{ memberSearchTerm }}"
+              </div>
+              <div *ngIf="filteredUsers.length === 0 && !memberSearchTerm" class="dropdown-item no-results">
+                No members available
+              </div>
+            </div>
+          </div>
+          <div *ngIf="isLoadingUsers" class="loading-text">Loading members...</div>
+          <div *ngIf="connectionSlipForm.get('receiver_id')?.invalid && connectionSlipForm.get('receiver_id')?.touched" class="error-text">
+            Please select a member
+          </div>
+        </div>
+
+        <!-- Referral Type Block -->
+        <div class="form-group">
+          <label class="form-label">
+            Referral Type <span class="required">*</span>
+          </label>
+          <div class="referral-type-block">
+            <div class="referral-type-option">
+              <input 
+                type="radio" 
+                id="referral-inside" 
+                name="referral_type_enum"
+                value="inside" 
+                (change)="onReferralTypeEnumChange('inside')">
+              <label for="referral-inside" class="referral-type-label">
+                <span class="referral-type-icon">🏠</span>
+                <span class="referral-type-text">Inside</span>
+              </label>
+            </div>
+            <div class="referral-type-option">
+              <input 
+                type="radio" 
+                id="referral-outside" 
+                name="referral_type_enum"
+                value="outside" 
+                (change)="onReferralTypeEnumChange('outside')">
+              <label for="referral-outside" class="referral-type-label">
+                <span class="referral-type-icon">🌍</span>
+                <span class="referral-type-text">Outside</span>
+              </label>
+            </div>
+          </div>
+          <div *ngIf="connectionSlipForm.get('referral_type')?.invalid && connectionSlipForm.get('referral_type')?.touched" class="error-text">
+            Please select a referral type
+          </div>
+        </div>
+
+        <!-- Referral Type (Hidden, controlled by radio buttons) -->
+        <input type="hidden" formControlName="referral_type">
+
+        <!-- Referral Status -->
+        <div class="form-group">
+          <label class="form-label">
+            Referral Status <span class="required">*</span>
+          </label>
+          <div class="checkbox-group">
+            <label class="checkbox-option">
+              <input 
+                type="checkbox" 
+                formControlName="told_them_you_would_will">
+              <span class="checkbox-text">Told them you would call</span>
+            </label>
+            <label class="checkbox-option">
+              <input 
+                type="checkbox" 
+                formControlName="given_card">
+              <span class="checkbox-text">Given your card</span>
+            </label>
+          </div>
+          <div *ngIf="connectionSlipForm.get('told_them_you_would_will')?.invalid && connectionSlipForm.get('told_them_you_would_will')?.touched" class="error-text">
+            Please select at least one status
+          </div>
+        </div>
+
+        <!-- Referral Details -->
+        <div class="form-group">
+          <label class="form-label">
+            Referral Details <span class="required">*</span>
+          </label>
+          
+          <div class="form-row">
+            <div class="form-col">
+              <label class="field-label">
+                Referral Name <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                formControlName="referral"
+                placeholder="Enter referral person's name"
+                class="form-input"
+                [class.error]="connectionSlipForm.get('referral')?.invalid && connectionSlipForm.get('referral')?.touched">
+              <div *ngIf="connectionSlipForm.get('referral')?.invalid && connectionSlipForm.get('referral')?.touched" class="error-text">
+                Please enter referral person's name
+              </div>
+            </div>
+            
+            <div class="form-col">
+              <label class="field-label">
+                Mobile Number <span class="required">*</span>
+              </label>
+              <input 
+                type="tel" 
+                formControlName="mobile_number"
+                placeholder="Enter 10-digit mobile number"
+                class="form-input"
+                maxlength="10"
+                (input)="onMobileInput($event)"
+                (keypress)="onMobileKeypress($event)"
+                [class.error]="connectionSlipForm.get('mobile_number')?.invalid && connectionSlipForm.get('mobile_number')?.touched">
+              <div *ngIf=" connectionSlipForm.get('mobile_number')?.invalid && connectionSlipForm.get('mobile_number')?.touched" class="error-text">
+                <span *ngIf="connectionSlipForm.get('mobile_number')?.errors?.['required']">Please enter mobile number</span>
+                <span *ngIf="connectionSlipForm.get('mobile_number')?.errors?.['pattern']">Please enter valid 10-digit mobile number</span>
+                <span *ngIf="connectionSlipForm.get('mobile_number')?.errors?.['minlength']">Mobile number must be 10 digits</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-col">
+              <label class="field-label">
+                Business Name <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                formControlName="business_name"
+                placeholder="Enter business/company name"
+                class="form-input"
+                [class.error]="connectionSlipForm.get('business_name')?.invalid && connectionSlipForm.get('business_name')?.touched">
+              <div *ngIf="connectionSlipForm.get('business_name')?.invalid && connectionSlipForm.get('business_name')?.touched" class="error-text">
+                Please enter business name
+              </div>
+            </div>
+            
+            <div class="form-col">
+              <label class="field-label">Address</label>
+              <textarea 
+                formControlName="address"
+                placeholder="Enter address (optional)"
+                class="form-textarea"
+                rows="3"></textarea>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-col full-width">
+              <label class="field-label">Comments</label>
+              <textarea 
+                formControlName="comments"
+                placeholder="Enter any additional comments (optional)"
+                class="form-textarea"
+                rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rating -->
+        <div class="form-group">
+          <label class="form-label">
+            Rating <span class="required">*</span>
+          </label>
+          <div class="rating-input">
+            <div class="star-rating">
+              <span 
+                *ngFor="let i of [1,2,3,4,5]" 
+                class="rating-star"
+                [class.active]="i <= connectionSlipForm.get('rating')?.value"
+                (click)="connectionSlipForm.patchValue({rating: i}); connectionSlipForm.get('rating')?.markAsTouched()">
+                ★
+              </span>
+            </div>
+            <span class="rating-text">{{ connectionSlipForm.get('rating')?.value }}.0</span>
+          </div>
+          <div *ngIf="connectionSlipForm.get('rating')?.invalid && connectionSlipForm.get('rating')?.touched" class="error-text">
+            Please select a rating
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" (click)="closeConnectionSlip()">
+            Cancel
+          </button>
+          <button 
+            type="submit" 
+            class="btn-submit"
+            [disabled]="connectionSlipForm.invalid">
+            Create Referral
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

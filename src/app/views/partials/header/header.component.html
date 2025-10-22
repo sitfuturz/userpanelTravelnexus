@@ -1,0 +1,86 @@
+<header class="header">
+  <nav class="navbar navbar-expand navbar-light bg-light">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+      <!-- Sidebar Toggle Button -->
+      <button 
+        class="btn btn-outline-secondary d-lg-none me-2" 
+        type="button" 
+        (click)="toggleSidebar()"
+        aria-label="Toggle sidebar"
+      >
+        <i class="fas fa-bars"></i>
+      </button>
+      
+      <!-- Brand -->
+      <a class="navbar-brand text-secondary fw-bold ms-2"> User Panel</a>
+     
+      
+
+      <!-- Navigation Items -->
+      <div class="navbar-collapse justify-content-end header-right">
+        <ul class="navbar-nav ms-auto align-items-center">
+          <!-- User Profile Section -->
+          <li class="nav-item dropdown" #userDropdown>
+            <div 
+              class="user-profile-section" 
+              (click)="toggleUserMenu()"
+              [class.active]="showUserMenu">
+              <div class="user-avatar-container">
+                <img 
+                  [src]="imageurl+getUserProfileImage()" 
+                  [alt]="currentUser?.name || 'User'"
+                  class="user-avatar"
+                  onerror="this.src='assets/images/placeholder-image.png'">
+                <div class="user-status-indicator"></div>
+              </div>
+              <div class="user-info">
+                <div class="user-name">{{ currentUser?.name || 'User' }}</div>
+                <div class="user-role">{{ currentUser?.chapter_name || 'Member' }}</div>
+              </div>
+              <i class="fas fa-chevron-down dropdown-arrow" [class.rotated]="showUserMenu"></i>
+            </div>
+            
+            <!-- User Dropdown Menu -->
+            <div class="user-dropdown-menu" [class.show]="showUserMenu">
+              <div class="dropdown-header">
+                <div class="user-summary">
+                  <img 
+                    [src]="imageurl+getUserProfileImage()" 
+                    [alt]="currentUser?.name || 'User'"
+                    class="dropdown-avatar"
+                    onerror="this.src='assets/images/placeholder-image.png'">
+                  <div class="user-details">
+                    <div class="user-name">{{ currentUser?.name || 'User' }}</div>
+                    <div class="user-email">{{ currentUser?.email || 'user@example.com' }}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="dropdown-divider"></div>
+              
+              <div class="dropdown-items">
+                <a class="dropdown-item" (click)="navigateToProfile()">
+                  <i class="fas fa-user"></i>
+                  <span>View Profile</span>
+                </a>
+                <a class="dropdown-item" (click)="navigateToNotifications()">
+                  <i class="fas fa-bell"></i>
+                  <span>Notifications</span>
+                </a>
+              </div>
+              
+              <div class="dropdown-divider"></div>
+              
+              <div class="dropdown-items">
+                <a class="dropdown-item logout-item" (click)="logout()">
+                  <i class="fas fa-sign-out-alt"></i>
+                  <span>Logout</span>
+                </a>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,382 @@
+<div class="tyfcb-container">
+  <!-- Header Section -->
+  <div class="tyfcb-header">
+    <h1 class="page-title">TYFCB Slip</h1>
+    <div class="header-controls">
+      <div class="tab-container">
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'given'"
+          (click)="switchTab('given')">
+          Given
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'received'"
+          (click)="switchTab('received')">
+          Received
+        </button>
+      </div>
+      <button class="add-btn" (click)="openTyfcbSlip()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        TYFCB Slip
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Container -->
+  <div class="table-container">
+    <!-- Table Header -->
+    <div class="table-header">
+      <div class="header-cell name-col">Name</div>
+      <div class="header-cell business-col">Business Type</div>
+      <div class="header-cell amount-col">Amount (₹)</div>
+      <div class="header-cell action-col">Action</div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading TYFCBs...</p>
+    </div>
+
+    <!-- TYFCB List -->
+    <div *ngIf="!isLoading" class="tyfcb-list">
+      <div 
+        *ngFor="let tyfcb of currentTyfcbs; let i = index" 
+        class="tyfcb-row"
+        [class.even]="i % 2 === 1">
+        
+        <!-- Name Column -->
+        <div class="cell name-cell">
+          <div class="user-info">
+            <img 
+              [src]="imageUrl+tyfcb.giverId?.profilePic || 'assets/images/placeholder-image.png'"
+              [alt]="activeTab === 'given' ? getReceiverName(tyfcb) : tyfcb.giverId?.name"
+              class="user-avatar"
+                onerror="this.src='assets/images/placeholder-image.png'">
+            <span class="user-name">
+              {{ activeTab === 'given' ? getReceiverName(tyfcb)||'N/A' : tyfcb.giverId?.name||'N/A' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Business Type Column -->
+        <div class="cell business-cell">
+          <span class="business-type">{{ tyfcb.business_type }}</span>
+        </div>
+
+        <!-- Amount Column -->
+        <div class="cell amount-cell">
+          <span class="amount-value">₹{{ tyfcb.amount | number:'1.2-2' }}</span>
+        </div>
+
+        <!-- Action Column -->
+        <div class="cell action-cell">
+          <button class="action-btn" (click)="openDetailModal(tyfcb._id)" title="View Details">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="currentTyfcbs.length === 0" class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>No {{ activeTab }} TYFCBs found</h3>
+        <p>{{ activeTab === 'given' ? 'Start creating TYFCBs by clicking the TYFCB Slip button' : 'You haven\'t received any TYFCBs yet' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && currentTyfcbs.length > 0" class="pagination-container">
+    <div class="pagination">
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage <= 1"
+        (click)="goToPage(currentPage - 1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15,18 9,12 15,6"/>
+        </svg>
+      </button>
+      <button 
+        *ngFor="let page of paginationPages"
+        class="pagination-btn"
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)">
+        {{ page }}
+      </button>
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage >= totalPages"
+        (click)="goToPage(currentPage + 1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9,18 15,12 9,6"/>
+        </svg>
+      </button>
+    </div>
+    <div class="pagination-info">
+      Page {{ currentPage }} of {{ totalPages }}
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div *ngIf="showDetailModal" class="modal-overlay" (click)="closeDetailModal()">
+  <div class="modal-container detail-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-section">
+        <h2>TYFCB Details</h2>
+        <div class="modal-meta">
+          <span class="from-label">From: <strong>{{ selectedTyfcb?.giverId?.name ||'Unknown' }}</strong></span>
+          <span class="date-label">{{ selectedTyfcb?.createdAt | date:'medium' }}</span>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeDetailModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="thank-you-section">
+        <span class="thank-you-label">Thank you to:</span>
+        <div class="receiver-info">
+          <img 
+            [src]="imageUrl+selectedTyfcb?.receiverId?.profilePic || 'assets/images/placeholder-image.png'"
+            [alt]="getReceiverName(selectedTyfcb!)"
+            class="receiver-avatar"
+             onerror="this.src='assets/images/placeholder-image.png'">
+          <div class="receiver-details">
+            <span class="receiver-name">{{ getReceiverName(selectedTyfcb!) }}</span>
+            <span class="receiver-chapter">Member</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="referral-type-section">
+        <span class="section-label">Referral Type</span>
+        <div class="type-buttons">
+          <button 
+            class="type-btn"
+            [class.active]="selectedTyfcb?.referral_type === 'Inside'">
+            Inside
+          </button>
+          <button 
+            class="type-btn"
+            [class.active]="selectedTyfcb?.referral_type === 'Outside'">
+            Outside
+          </button>
+          <button 
+            class="type-btn"
+            [class.active]="selectedTyfcb?.referral_type === 'Tier3+'">
+            Tier3+
+          </button>
+        </div>
+      </div>
+
+      <div class="amount-section">
+        <span class="section-label">Amount (₹)</span>
+        <div class="amount-display">₹{{ selectedTyfcb?.amount | number:'1.2-2' }}</div>
+      </div>
+
+      <div class="business-type-section">
+        <span class="section-label">Business Type</span>
+        <div class="business-type-buttons">
+          <button 
+            class="business-btn"
+            [class.active]="selectedTyfcb?.business_type === 'New'">
+            New
+          </button>
+          <button 
+            class="business-btn"
+            [class.active]="selectedTyfcb?.business_type === 'Repeat'">
+            Repeat
+          </button>
+        </div>
+      </div>
+
+      <div class="comments-section">
+        <span class="section-label">Comments</span>
+        <div class="comments-text">{{ selectedTyfcb?.comments || 'Nice one' }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TYFCB Slip Modal -->
+<div *ngIf="showTyfcbSlipModal" class="modal-overlay" (click)="closeTyfcbSlipModal()">
+  <div class="modal-container create-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>TYFCB Slip</h2>
+      <button class="close-btn" (click)="closeTyfcbSlipModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="tyfcbSlipForm" (ngSubmit)="onSubmitTyfcbSlip()">
+        
+        <div class="form-section">
+          <span class="section-label">
+            Is the member In - Chapter or Cross - Chapter? <span class="required">*</span>
+          </span>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input 
+                type="radio" 
+                name="receiverType"
+                value="inChapter" 
+                formControlName="receiverType"
+                (change)="onReceiverTypeChange($event)">
+              <span class="radio-text">In - Chapter</span>
+            </label>
+            <label class="radio-option">
+              <input 
+                type="radio" 
+                name="receiverType"
+                value="outside" 
+                formControlName="receiverType"
+                (change)="onReceiverTypeChange($event)">
+              <span class="radio-text">Cross - Chapter</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-section" *ngIf="showMemberSelect || availableUsers.length > 0">
+          <span class="section-label">
+            Select Member <span class="required">*</span>
+          </span>
+          <div class="searchable-dropdown">
+            <input 
+              type="text" 
+              #memberSearch 
+              class="form-input search-input"
+              placeholder="Search and select a member..."
+              (input)="onMemberSearch($event)"
+              (focus)="onMemberFocus()"
+              (blur)="onMemberBlur()"
+              [value]="selectedMemberDisplay">
+            <div class="dropdown-list" [class.show]="showMemberDropdown">
+              <div 
+                *ngFor="let user of filteredUsers" 
+                class="dropdown-item"
+                (mousedown)="selectMember(user)">
+                {{ user.name }} - {{ user.chapter_name || 'N/A' }}
+              </div>
+              <div *ngIf="filteredUsers.length === 0 && memberSearchTerm" class="dropdown-item no-results">
+                No members found matching "{{ memberSearchTerm }}"
+              </div>
+              <div *ngIf="filteredUsers.length === 0 && !memberSearchTerm" class="dropdown-item no-results">
+                No members available
+              </div>
+            </div>
+          </div>
+          <div *ngIf="isLoadingUsers" class="loading-text">Loading members...</div>
+          <div *ngIf="tyfcbSlipForm.get('receiverId')?.invalid && tyfcbSlipForm.get('receiverId')?.touched" class="error-text">
+            Please select a member
+          </div>
+        </div>
+
+        <div class="form-section">
+          <span class="section-label">
+            Referral Type <span class="required">*</span>
+          </span>
+          <div class="type-buttons">
+            <button 
+              type="button"
+              class="type-btn"
+              [class.active]="tyfcbSlipForm.get('referral_type')?.value === 'Inside'"
+              (click)="tyfcbSlipForm.patchValue({referral_type: 'Inside'}); tyfcbSlipForm.get('referral_type')?.markAsTouched()">
+              Inside
+            </button>
+            <button 
+              type="button"
+              class="type-btn"
+              [class.active]="tyfcbSlipForm.get('referral_type')?.value === 'Outside'"
+              (click)="tyfcbSlipForm.patchValue({referral_type: 'Outside'}); tyfcbSlipForm.get('referral_type')?.markAsTouched()">
+              Outside
+            </button>
+            <button 
+              type="button"
+              class="type-btn"
+              [class.active]="tyfcbSlipForm.get('referral_type')?.value === 'Tier3+'"
+              (click)="tyfcbSlipForm.patchValue({referral_type: 'Tier3+'}); tyfcbSlipForm.get('referral_type')?.markAsTouched()">
+              Tier3+
+            </button>
+          </div>
+          <div *ngIf="tyfcbSlipForm.get('referral_type')?.invalid && tyfcbSlipForm.get('referral_type')?.touched" class="error-text">
+            Please select a referral type
+          </div>
+        </div>
+
+        <div class="form-section">
+          <span class="section-label">
+            Amount (₹) <span class="required">*</span>
+          </span>
+          <input 
+            type="number" 
+            formControlName="amount" 
+            placeholder="Enter Amount (₹)"
+            min="0"
+            step="0.01"
+            class="form-input"
+            [class.error]="tyfcbSlipForm.get('amount')?.invalid && tyfcbSlipForm.get('amount')?.touched">
+          <div *ngIf="tyfcbSlipForm.get('amount')?.invalid && tyfcbSlipForm.get('amount')?.touched" class="error-text">
+            <span *ngIf="tyfcbSlipForm.get('amount')?.errors?.['required']">Please enter amount</span>
+            <span *ngIf="tyfcbSlipForm.get('amount')?.errors?.['min']">Amount must be greater than 0</span>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <span class="section-label">
+            Business Type <span class="required">*</span>
+          </span>
+          <div class="business-type-buttons">
+            <button 
+              type="button"
+              class="business-btn"
+              [class.active]="tyfcbSlipForm.get('business_type')?.value === 'New'"
+              (click)="tyfcbSlipForm.patchValue({business_type: 'New'}); tyfcbSlipForm.get('business_type')?.markAsTouched()">
+              New
+            </button>
+            <button 
+              type="button"
+              class="business-btn"
+              [class.active]="tyfcbSlipForm.get('business_type')?.value === 'Repeat'"
+              (click)="tyfcbSlipForm.patchValue({business_type: 'Repeat'}); tyfcbSlipForm.get('business_type')?.markAsTouched()">
+              Repeat
+            </button>
+          </div>
+          <div *ngIf="tyfcbSlipForm.get('business_type')?.invalid && tyfcbSlipForm.get('business_type')?.touched" class="error-text">
+            Please select a business type
+          </div>
+        </div>
+
+        <div class="form-section">
+          <span class="section-label">Comments</span>
+          <textarea 
+            formControlName="comments" 
+            placeholder="Write here (optional)..."
+            class="form-textarea"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-confirm" [disabled]="tyfcbSlipForm.invalid">
+            Confirm
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

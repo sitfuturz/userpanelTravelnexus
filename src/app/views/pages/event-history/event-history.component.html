@@ -1,0 +1,235 @@
+<div class="event-history-container">
+  <!-- Header Section -->
+  <div class="event-history-header">
+    <h1 class="page-title">Event Registration History</h1>
+    <div class="header-controls">
+      <div class="filter-container">
+        <button 
+          class="filter-btn" 
+          [class.active]="paymentStatusFilter === 'all'"
+          (click)="switchPaymentFilter('all')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+          All
+        </button>
+        <div class="filter-separator"></div>
+        <button 
+          class="filter-btn" 
+          [class.active]="paymentStatusFilter === 'pending'"
+          (click)="switchPaymentFilter('pending')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12,6 12,12 16,14"/>
+            </svg>
+          Pending
+        </button>
+        <div class="filter-separator"></div>
+        <button 
+          class="filter-btn" 
+          [class.active]="paymentStatusFilter === 'completed'"
+          (click)="switchPaymentFilter('completed')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22,4 12,14.01 9,11.01"/>
+            </svg>
+          Completed
+        </button>
+        <div class="filter-separator"></div>
+        <button 
+          class="filter-btn" 
+          [class.active]="paymentStatusFilter === 'failed'"
+          (click)="switchPaymentFilter('failed')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          Failed
+        </button>
+        <div class="filter-separator"></div>
+        <button 
+          class="filter-btn" 
+          [class.active]="paymentStatusFilter === 'refunded'"
+          (click)="switchPaymentFilter('refunded')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          Refunded
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Events Container -->
+  <div class="events-container">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading event history...</p>
+    </div>
+
+    <!-- Events List -->
+    <div *ngIf="!isLoading" class="events-list">
+      <div 
+        *ngFor="let event of events; trackBy: trackByEventId" 
+        class="event-card">
+        
+        <!-- Event Image -->
+        <div class="event-image">
+          <img 
+            [src]="getEventImage(event)"
+            [alt]="event.title"
+            class="event-thumbnail"
+            onerror="this.src='assets/images/placeholder-image.png'">
+          
+          <!-- Event Type Badge -->
+          <div class="event-type-badge" [class]="event.eventType">
+            {{ formatEventType(event.eventType) }}
+          </div>
+        </div>
+
+        <!-- Event Info -->
+        <div class="event-info">
+          <h3 class="event-title">{{ event.title }}</h3>
+          
+          <p class="event-description" *ngIf="event.description">
+            {{ event.description.length > 150 ? (event.description.substring(0, 150) + '...') : event.description }}
+          </p>
+          
+          <div class="event-meta">
+            <div class="meta-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              <span>{{ formatDate(event.startDate) }}</span>
+            </div>
+            
+            <div class="meta-item" *ngIf="event.startTime">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12,6 12,12 16,14"/>
+              </svg>
+              <span>{{ formatTime(event.startTime) }}</span>
+            </div>
+            
+            <div class="meta-item" *ngIf="event.location">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>{{ event.location }}</span>
+            </div>
+          </div>
+
+          <!-- Organizer Info -->
+          <div class="organizer-info" *ngIf="event.organizer">
+            <div class="organizer-label">Organized by:</div>
+            <div class="organizer-name">{{ event.organizer.name }}</div>
+          </div>
+        </div>
+
+        <!-- Registration Details -->
+        <div class="registration-details">
+          <h4 class="registration-title">Your Registrations</h4>
+          <div class="registrations-list">
+            <div 
+              *ngFor="let registration of event.registrations; trackBy: trackByRegistrationId" 
+              class="registration-item">
+              
+              <div class="registration-header">
+                <div class="registration-status">
+                  <span class="status-badge" [ngClass]="getRegistrationStatusClass(registration.status)">
+                    {{ registration.status | titlecase }}
+                  </span>
+                </div>
+                <div class="registration-date">
+                  {{ formatDate(registration.registeredAt) }}
+                </div>
+              </div>
+
+              <div class="registration-info">
+                <div class="info-row">
+                  <span class="info-label">Ticket Type:</span>
+                  <span class="info-value">{{ registration.ticketType || 'Standard' }}</span>
+                </div>
+                
+                <div class="info-row" *ngIf="registration.payment">
+                  <span class="info-label">Payment Status:</span>
+                  <span class="status-badge" [ngClass]="getPaymentStatusClass(registration.paymentStatus)">
+                    {{ registration.paymentStatus | titlecase }}
+                  </span>
+                </div>
+
+                <div class="info-row" *ngIf="registration.payment?.amount">
+                  <span class="info-label">Amount:</span>
+                  <span class="info-value amount">{{ formatCurrency(registration.payment.amount) }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="registration.payment?.paymentMethod">
+                  <span class="info-label">Payment Method:</span>
+                  <span class="info-value">{{ registration.payment.paymentMethod | titlecase }}</span>
+                </div>
+
+                <div class="info-row" *ngIf="registration.payment?.transactionId">
+                  <span class="info-label">Transaction ID:</span>
+                  <span class="info-value transaction-id">{{ registration.payment.transactionId }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="events.length === 0" class="empty-state">
+        <div class="empty-icon">📅</div>
+        <h3>No event registrations found</h3>
+        <p>You haven't registered for any events yet.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && events.length > 0" class="pagination-container">
+    <div class="pagination-info">
+      <span>Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, totalDocs) }} of {{ totalDocs }} registrations</span>
+    </div>
+    
+    <div class="pagination-controls">
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage === 1"
+        (click)="prevPage()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15,18 9,12 15,6"/>
+        </svg>
+        Previous
+      </button>
+      
+      <div class="page-numbers">
+        <button 
+          *ngFor="let page of getPageNumbers()" 
+          class="page-btn"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)">
+          {{ page }}
+        </button>
+      </div>
+      
+      <button 
+        class="pagination-btn" 
+        [disabled]="currentPage === totalPages"
+        (click)="nextPage()">
+        Next
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9,18 15,12 9,6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

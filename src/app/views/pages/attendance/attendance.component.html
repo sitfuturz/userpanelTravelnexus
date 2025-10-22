@@ -1,0 +1,196 @@
+<div class="attendance-container">
+  <!-- Header Section -->
+  <div class="attendance-header">
+    <h1 class="page-title">Attendance</h1>
+    
+    <!-- Search Bar -->
+    <div class="search-container">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input 
+          type="text" 
+          placeholder="Search Events..." 
+          class="search-input"
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-section">
+    <div class="summary-card present-card">
+      <div class="summary-number">{{ attendanceSummary?.totalPresent || 0 }}</div>
+      <div class="summary-label">Total Present</div>
+    </div>
+    
+    <div class="summary-card absent-card">
+      <div class="summary-number">{{ attendanceSummary?.totalAbsent || 0 }}</div>
+      <div class="summary-label">Total Absent</div>
+    </div>
+    
+    <div class="summary-card percentage-card" *ngIf="attendanceSummary">
+      <div class="summary-number">{{ getAttendancePercentage() }}%</div>
+      <div class="summary-label">Attendance Rate</div>
+    </div>
+  </div>
+
+  <!-- Attendance Container -->
+  <div class="attendance-content">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading attendance data...</p>
+    </div>
+
+    <!-- Attendance Table -->
+    <div *ngIf="!isLoading" class="attendance-table-container">
+      <div class="table-header">
+        <div class="header-cell name-header">Name</div>
+        <div class="header-cell date-header">Date</div>
+        <div class="header-cell status-header">Status</div>
+      </div>
+
+      <div class="table-body">
+        <div 
+          *ngFor="let record of filteredAttendance; trackBy: trackByRecordId" 
+          class="table-row"
+          (click)="openEventDetail(record.event)">
+          
+          <!-- Event Info -->
+          <div class="table-cell name-cell">
+            <div class="event-info-wrapper">
+              <div class="event-image-small">
+                <img 
+                  [src]="getEventImage(record.event)"
+                  [alt]="record.event.name"
+                  class="event-thumbnail-small"
+                  onerror="this.src='assets/images/placeholder-image.png'">
+                
+                <!-- Event Type Badge -->
+                <div class="event-type-badge" [class]="record.event.event_or_meeting">
+                  {{ formatEventType(record.event.event_or_meeting || '') }}
+                </div>
+              </div>
+              
+              <div class="event-text-info">
+                <h4 class="event-name-small">{{ record.event.name }}</h4>
+                <div class="event-chapter" *ngIf="attendanceSummary?.chapter">
+                  {{ attendanceSummary?.chapter }}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Date -->
+          <div class="table-cell date-cell">
+            <span class="date-display">{{ formatDate(record.event.date) }}</span>
+            <span class="attendance-date" *ngIf="record.createdAt">
+              Marked: {{ formatDate(record.createdAt) }}
+            </span>
+          </div>
+          
+          <!-- Status -->
+          <div class="table-cell status-cell">
+            <div class="status-badge" [class]="record.status.toLowerCase()">
+              <svg *ngIf="record.status === 'Present'" class="status-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              <svg *ngIf="record.status === 'Absent'" class="status-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              <span class="status-text">{{ record.status }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredAttendance.length === 0" class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3>No attendance records found</h3>
+        <p *ngIf="searchQuery">No records match your search criteria.</p>
+        <p *ngIf="!searchQuery">No attendance data available at the moment.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Event Detail Modal (Reuse from events component) -->
+<div *ngIf="showDetailModal" class="modal-overlay" (click)="closeDetailModal()">
+  <div class="modal-container detail-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-section">
+        <h2>{{ selectedEvent?.name }}</h2>
+        <div class="modal-meta">
+          <span class="event-type-label">{{ formatEventType(selectedEvent?.event_or_meeting || '') }}</span>
+          <span class="date-label">{{ formatDate(selectedEvent?.date || '') }}</span>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeDetailModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Event Image -->
+     <div class="event-detail-image" *ngIf="selectedEvent?.thumbnail">
+  <img [src]="selectedEvent ? getEventImage(selectedEvent) : ''" [alt]="selectedEvent?.name" class="detail-thumbnail">
+</div>
+
+      <!-- Event Details -->
+      <div class="event-details-section">
+        <!-- Date -->
+        <div class="detail-item">
+          <span class="detail-label">Event Date</span>
+          <div class="detail-value">
+            <span>{{ formatDate(selectedEvent?.date || '') }}</span>
+          </div>
+        </div>
+        
+        <!-- Event Type -->
+        <div class="detail-item">
+          <span class="detail-label">Type</span>
+          <span class="detail-value type-value" [class]="selectedEvent?.event_or_meeting || 'meeting'">
+            {{ formatEventType(selectedEvent?.event_or_meeting || '') }}
+          </span>
+        </div>
+        
+        <!-- Paid Status -->
+        <div class="detail-item" *ngIf="selectedEvent?.paid">
+          <span class="detail-label">Event Fee</span>
+          <span class="detail-value paid-value">Paid Event</span>
+        </div>
+        
+        <!-- Attendance Status -->
+        <div class="detail-item" *ngIf="selectedAttendanceRecord">
+          <span class="detail-label">Your Status</span>
+          <div class="detail-value">
+            <div class="status-badge large" [class]="selectedAttendanceRecord.status.toLowerCase()">
+              <svg *ngIf="selectedAttendanceRecord.status === 'Present'" class="status-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              <svg *ngIf="selectedAttendanceRecord.status === 'Absent'" class="status-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              <span class="status-text">{{ selectedAttendanceRecord.status }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Marked Date -->
+        <div class="detail-item" *ngIf="selectedAttendanceRecord?.createdAt">
+          <span class="detail-label">Marked On</span>
+<span class="detail-value">{{ formatDate(selectedAttendanceRecord?.createdAt ?? '') }}</span>        </div>
+      </div>
+    </div>
+  </div>
+</div>

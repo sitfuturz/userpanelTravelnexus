@@ -1,0 +1,338 @@
+<div class="leaderboard-container">
+  <!-- Header Section -->
+  <div class="leaderboard-header">
+    <h1 class="page-title">Leaderboard</h1>
+    
+    <!-- Filter Controls -->
+    <div class="filter-controls">
+      <div class="date-filters">
+        <input 
+          type="date" 
+          class="date-input"
+          [(ngModel)]="fromDate"
+          (change)="onDateFilterChange()"
+          placeholder="From Date">
+        <span class="date-separator">to</span>
+        <input 
+          type="date" 
+          class="date-input"
+          [(ngModel)]="toDate"
+          (change)="onDateFilterChange()"
+          placeholder="To Date">
+        <button class="clear-filter-btn" (click)="clearDateFilters()" *ngIf="fromDate || toDate">
+          Clear
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Performers Section -->
+  <div class="top-performers-section" *ngIf="!isLoading && leaderboardData.length > 0">
+    <h2 class="section-title">Top Performers</h2>
+    
+    <div class="top-performers-grid">
+      <!-- First Place -->
+      <div class="top-performer-card first-place" *ngIf="leaderboardData[0]">
+        <div class="rank-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12,2 15.09,8.26 22,9 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9 8.91,8.26"/>
+          </svg>
+          <span>1</span>
+        </div>
+        <div class="performer-avatar">
+          <img 
+            [src]="getUserImage(leaderboardData[0])"
+            [alt]="leaderboardData[0].name"
+            class="avatar-img">
+        </div>
+        <h3 class="performer-name">{{ leaderboardData[0].name }}</h3>
+        <div class="performer-chapter">{{ leaderboardData[0].chapter_name }}</div>
+        <div class="performer-points">{{ leaderboardData[0].totalPointsSum }}</div>
+        <div class="points-label">Points</div>
+      </div>
+
+      <!-- Second Place -->
+      <div class="top-performer-card second-place" *ngIf="leaderboardData[1]">
+        <div class="rank-badge">
+          <span>2</span>
+        </div>
+        <div class="performer-avatar">
+          <img 
+            [src]="getUserImage(leaderboardData[1])"
+            [alt]="leaderboardData[1].name"
+            class="avatar-img">
+        </div>
+        <h3 class="performer-name">{{ leaderboardData[1].name }}</h3>
+        <div class="performer-chapter">{{ leaderboardData[1].chapter_name }}</div>
+        <div class="performer-points">{{ leaderboardData[1].totalPointsSum }}</div>
+        <div class="points-label">Points</div>
+      </div>
+
+      <!-- Third Place -->
+      <div class="top-performer-card third-place" *ngIf="leaderboardData[2]">
+        <div class="rank-badge">
+          <span>3</span>
+        </div>
+        <div class="performer-avatar">
+          <img 
+            [src]="getUserImage(leaderboardData[2])"
+            [alt]="leaderboardData[2].name"
+            class="avatar-img">
+        </div>
+        <h3 class="performer-name">{{ leaderboardData[2].name }}</h3>
+        <div class="performer-chapter">{{ leaderboardData[2].chapter_name }}</div>
+        <div class="performer-points">{{ leaderboardData[2].totalPointsSum }}</div>
+        <div class="points-label">Points</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard Table -->
+  <div class="leaderboard-content">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading leaderboard data...</p>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div *ngIf="!isLoading" class="leaderboard-table-container">
+      <div class="table-header">
+        <div class="header-cell rank-header">Rank</div>
+        <div class="header-cell name-header">Name</div>
+        <div class="header-cell chapter-header">Chapter</div>
+        <div class="header-cell points-header">Points</div>
+        <div class="header-cell breakdown-header">Breakdown</div>
+      </div>
+
+      <div class="table-body">
+        <div 
+          *ngFor="let user of leaderboardData; let i = index; trackBy: trackByUserId" 
+          class="table-row"
+          [class.current-user]="isCurrentUser(user.userId)"
+          (click)="openUserDetail(user)">
+          
+          <!-- Rank -->
+          <div class="table-cell rank-cell">
+            <div class="rank-display" [class]="getRankClass(i + currentRankOffset)">
+              <span class="rank-number">#{{ i + currentRankOffset }}</span>
+              <svg *ngIf="i + currentRankOffset === 1" class="crown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12,2 15.09,8.26 22,9 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9 8.91,8.26"/>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- User Info -->
+          <div class="table-cell name-cell">
+            <div class="user-info-wrapper">
+              <div class="user-avatar">
+                <img 
+                  [src]="getUserImage(user)"
+                  [alt]="user.name"
+                  class="avatar-small"
+                  onerror="this.src='assets/images/placeholder-image.png'">
+              </div>
+              
+              <div class="user-text-info">
+                <h4 class="user-name">{{ user.name }}</h4>
+                <div class="user-id">ID: {{ user.userId.slice(-6) }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Chapter -->
+          <div class="table-cell chapter-cell">
+            <span class="chapter-badge">{{ user.chapter_name }}</span>
+          </div>
+          
+          <!-- Total Points -->
+          <div class="table-cell points-cell">
+            <div class="total-points">{{ user.totalPointsSum }}</div>
+          </div>
+          
+          <!-- Points Breakdown -->
+          <div class="table-cell breakdown-cell">
+            <div class="points-breakdown">
+              <div class="breakdown-item" *ngIf="user.attendance_regular > 0">
+                <span class="breakdown-label">Attendance</span>
+                <span class="breakdown-value">{{ user.attendance_regular }}</span>
+              </div>
+              <div class="breakdown-item" *ngIf="user.one_to_one > 0">
+                <span class="breakdown-label">1-to-1</span>
+                <span class="breakdown-value">{{ user.one_to_one }}</span>
+              </div>
+              <div class="breakdown-item" *ngIf="user.referal > 0">
+                <span class="breakdown-label">Referral</span>
+                <span class="breakdown-value">{{ user.referal }}</span>
+              </div>
+              <div class="breakdown-item" *ngIf="user.tyfcb > 0">
+                <span class="breakdown-label">TYFCB</span>
+                <span class="breakdown-value">{{ user.tyfcb }}</span>
+              </div>
+              <div class="breakdown-item" *ngIf="user.event_attendance > 0">
+                <span class="breakdown-label">Events</span>
+                <span class="breakdown-value">{{ user.event_attendance }}</span>
+              </div>
+              <div class="breakdown-item" *ngIf="user.induction > 0">
+                <span class="breakdown-label">Induction</span>
+                <span class="breakdown-value">{{ user.induction }}</span>
+              </div>
+              <div class="breakdown-item" *ngIf="user.visitor > 0">
+                <span class="breakdown-label">Visitor</span>
+                <span class="breakdown-value">{{ user.visitor }}</span>
+              </div>
+              <div class="breakdown-item" *ngIf="user.testimonial > 0">
+                <span class="breakdown-label">Testimonial</span>
+                <span class="breakdown-value">{{ user.testimonial }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-container" *ngIf="paginationData">
+        <button 
+          class="pagination-btn"
+          [disabled]="!paginationData.hasPrevPage"
+          (click)="loadPage(paginationData.prevPage!)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15,18 9,12 15,6"/>
+          </svg>
+          Previous
+        </button>
+        
+        <div class="pagination-info">
+          <span>Page {{ paginationData.page }} of {{ paginationData.totalPages }}</span>
+          <span class="total-records">({{ paginationData.totalDocs }} total)</span>
+        </div>
+        
+        <button 
+          class="pagination-btn"
+          [disabled]="!paginationData.hasNextPage"
+          (click)="loadPage(paginationData.nextPage!)">
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9,18 15,12 9,6"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="leaderboardData.length === 0" class="empty-state">
+        <div class="empty-icon">🏆</div>
+        <h3>No leaderboard data found</h3>
+        <p>No points data available for the selected period.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Detail Modal -->
+<div *ngIf="showDetailModal" class="modal-overlay" (click)="closeDetailModal()">
+  <div class="modal-container detail-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-section">
+        <h2>{{ selectedUser?.name }}</h2>
+        <div class="modal-meta">
+          <span class="chapter-label">{{ selectedUser?.chapter_name }}</span>
+          <span class="rank-label">Rank #{{ selectedUserRank }}</span>
+        </div>
+      </div>
+      <button class="close-btn" (click)="closeDetailModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- User Profile -->
+      <div class="user-profile-section">
+        <div class="profile-avatar">
+          <img [src]="getUserImage(selectedUser!)" [alt]="selectedUser?.name" class="profile-img">
+        </div>
+        <div class="profile-info">
+          <h3>{{ selectedUser?.name }}</h3>
+          <p class="profile-chapter">{{ selectedUser?.chapter_name }} Chapter</p>
+          <div class="total-points-display">
+            <span class="points-number">{{ selectedUser?.totalPointsSum }}</span>
+            <span class="points-text">Total Points</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Points Breakdown -->
+      <div class="points-breakdown-section">
+        <h4 class="breakdown-title">Points Breakdown</h4>
+        
+        <div class="breakdown-grid">
+          <div class="breakdown-card" *ngIf="selectedUser?.attendance_regular">
+            <div class="breakdown-icon attendance">📅</div>
+            <div class="breakdown-info">
+              <div class="breakdown-value">{{ selectedUser?.attendance_regular }}</div>
+              <div class="breakdown-label">Regular Attendance</div>
+            </div>
+          </div>
+          
+          <div class="breakdown-card" *ngIf="selectedUser?.one_to_one">
+            <div class="breakdown-icon meeting">👥</div>
+            <div class="breakdown-info">
+              <div class="breakdown-value">{{ selectedUser?.one_to_one }}</div>
+              <div class="breakdown-label">One-to-One</div>
+            </div>
+          </div>
+          
+          <div class="breakdown-card" *ngIf="selectedUser?.referal">
+            <div class="breakdown-icon referral">🤝</div>
+            <div class="breakdown-info">
+              <div class="breakdown-value">{{ selectedUser?.referal }}</div>
+              <div class="breakdown-label">Referrals</div>
+            </div>
+          </div>
+          
+          <div class="breakdown-card" *ngIf="selectedUser?.tyfcb">
+            <div class="breakdown-icon tyfcb">💝</div>
+            <div class="breakdown-info">
+              <div class="breakdown-value">{{ selectedUser?.tyfcb }}</div>
+              <div class="breakdown-label">TYFCB</div>
+            </div>
+          </div>
+          
+          <div class="breakdown-card" *ngIf="selectedUser?.event_attendance">
+            <div class="breakdown-icon events">🎉</div>
+            <div class="breakdown-info">
+              <div class="breakdown-value">{{ selectedUser?.event_attendance }}</div>
+              <div class="breakdown-label">Event Attendance</div>
+            </div>
+          </div>
+          
+          <div class="breakdown-card" *ngIf="selectedUser?.induction">
+            <div class="breakdown-icon induction">🎓</div>
+            <div class="breakdown-info">
+              <div class="breakdown-value">{{ selectedUser?.induction }}</div>
+              <div class="breakdown-label">Induction</div>
+            </div>
+          </div>
+          
+          <div class="breakdown-card" *ngIf="selectedUser?.visitor">
+            <div class="breakdown-icon visitor">👋</div>
+            <div class="breakdown-info">
+              <div class="breakdown-value">{{ selectedUser?.visitor }}</div>
+              <div class="breakdown-label">Visitor</div>
+            </div>
+          </div>
+          
+          <div class="breakdown-card" *ngIf="selectedUser?.testimonial">
+            <div class="breakdown-icon testimonial">⭐</div>
+            <div class="breakdown-info">
+              <div class="breakdown-value">{{ selectedUser?.testimonial }}</div>
+              <div class="breakdown-label">Testimonials</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

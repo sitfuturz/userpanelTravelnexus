@@ -1,0 +1,171 @@
+/* Reuse your existing styles from customer-login.component.css */
+.login-container {
+  min-height: 100vh;
+  background-image: url('src/assets/images/Frame 427319413.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+.login-wrapper {
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 10px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logo-container .logo {
+  height: 60px;
+  width: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.otp-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 12px;
+}
+
+.otp-subtitle {
+  font-size: 15px;
+  color: #7f8c8d;
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+.otp-inputs-container {
+  display: flex;
+  justify-content: center;
+}
+
+.otp-inputs {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.otp-input {
+  width: 60px;
+  height: 60px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: #2c3e50;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.otp-input:focus {
+  outline: none;
+  border-color: #722f37;
+  box-shadow: 0 0 0 3px rgba(114, 47, 55, 0.1);
+}
+
+.btn-verify {
+  background: #722f37;
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.btn-verify:hover:not(:disabled) {
+  background: #5d252a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(114, 47, 55, 0.3);
+}
+
+.btn-verify:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #722f37;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-link:hover:not(:disabled) {
+  color: #5d252a;
+  text-decoration: underline;
+}
+
+.resend-text {
+  color: #6c757d;
+  margin: 0;
+  font-size: 14px;
+}
+
+.copyright {
+  font-size: 13px;
+  color: #adb5bd;
+}
+
+.brand-text {
+  color: #722f37;
+  font-weight: 600;
+}
+
+/* Responsive styles */
+@media (max-width: 576px) {
+  .login-card {
+    padding: 30px 20px;
+    border-radius: 15px;
+  }
+  
+  .logo {
+    height: 50px;
+  }
+  
+  .otp-title {
+    font-size: 22px;
+  }
+  
+  .otp-inputs {
+    gap: 10px;
+  }
+  
+  .otp-input {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,276 @@
+<div class="complaint-container">
+  <!-- Header Section -->
+  <div class="complaint-header">
+    <h1 class="page-title">Complaints</h1>
+    <div class="header-controls">
+      <button class="add-btn" (click)="openComplaintModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        New Complaint
+      </button>
+    </div>
+  </div>
+
+  <!-- Complaints List -->
+  <div class="complaints-grid">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading complaints...</p>
+    </div>
+
+    <!-- Complaint Cards -->
+    <div *ngIf="!isLoading && complaints.length > 0" class="complaint-cards">
+      <div *ngFor="let complaint of complaints" class="complaint-card">
+        <div class="card-header">
+          <div class="card-title-section">
+            <h3 class="card-title">{{ complaint.title }}</h3>
+            <span class="category-badge" [class]="'category-' + complaint.category">
+              {{ complaint.category }}
+            </span>
+          </div>
+          <span class="status-badge" [class]="'status-' + complaint.status">
+            {{ complaint.status }}
+          </span>
+        </div>
+
+        <div class="card-body">
+          <p class="complaint-details">{{ complaint.details }}</p>
+          
+          <div *ngIf="complaint.image" class="complaint-image-container">
+            <img 
+              [src]="imageUrl + complaint.image" 
+              [alt]="complaint.title"
+              class="complaint-image"
+              (click)="viewImage(complaint.image)"
+              onerror="this.style.display='none'">
+          </div>
+
+          <div *ngIf="complaint.adminResponse" class="admin-response">
+            <span class="response-label">Admin Response:</span>
+            <p class="response-text">{{ complaint.adminResponse }}</p>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <span class="date-info">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+            {{ complaint.createdAt | date:'MMM dd, yyyy' }}
+          </span>
+          <button class="view-btn" (click)="viewComplaintDetails(complaint)">
+            View Details
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && complaints.length === 0" class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h3>No complaints found</h3>
+      <p>You haven't submitted any complaints yet. Click "New Complaint" to get started.</p>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && totalPages > 1" class="pagination-container">
+    <div class="pagination">
+      <button 
+        class="pagination-btn" 
+        [disabled]="!hasPrevPage"
+        (click)="goToPage(currentPage - 1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15,18 9,12 15,6"/>
+        </svg>
+      </button>
+      <span class="pagination-info">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+      <button 
+        class="pagination-btn" 
+        [disabled]="!hasNextPage"
+        (click)="goToPage(currentPage + 1)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9,18 15,12 9,6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Create Complaint Modal -->
+<div *ngIf="showComplaintModal" class="modal-overlay" (click)="closeComplaintModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Submit New Complaint</h2>
+      <button class="close-btn" (click)="closeComplaintModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="complaintForm" (ngSubmit)="onSubmitComplaint()">
+        
+        <div class="form-section">
+          <label class="form-label">
+            Title <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            formControlName="title" 
+            placeholder="Enter complaint title"
+            class="form-input"
+            [class.error]="complaintForm.get('title')?.invalid && complaintForm.get('title')?.touched">
+          <div *ngIf="complaintForm.get('title')?.invalid && complaintForm.get('title')?.touched" class="error-text">
+            Title is required (minimum 3 characters)
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">
+            Category <span class="required">*</span>
+          </label>
+          <select 
+            formControlName="category" 
+            class="form-select"
+            [class.error]="complaintForm.get('category')?.invalid && complaintForm.get('category')?.touched">
+            <option value="">Select a category</option>
+            <option value="general">General</option>
+            <option value="technical">Technical</option>
+            <option value="account">Account</option>
+            <option value="other">Other</option>
+          </select>
+          <div *ngIf="complaintForm.get('category')?.invalid && complaintForm.get('category')?.touched" class="error-text">
+            Please select a category
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">
+            Details <span class="required">*</span>
+          </label>
+          <textarea 
+            formControlName="details" 
+            placeholder="Describe your complaint in detail..."
+            rows="5"
+            class="form-textarea"
+            [class.error]="complaintForm.get('details')?.invalid && complaintForm.get('details')?.touched">
+          </textarea>
+          <div *ngIf="complaintForm.get('details')?.invalid && complaintForm.get('details')?.touched" class="error-text">
+            Details are required (minimum 10 characters)
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">
+            Attach Image (Optional)
+          </label>
+          <div class="file-upload-container">
+            <input 
+              type="file" 
+              id="imageUpload"
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              class="file-input">
+            <label for="imageUpload" class="file-upload-label">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <span>{{ selectedFileName || 'Choose file' }}</span>
+            </label>
+            <div *ngIf="selectedFile" class="file-preview">
+              <img [src]="previewUrl" alt="Preview" class="preview-image">
+              <button type="button" class="remove-file-btn" (click)="removeFile()">
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" (click)="closeComplaintModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn-submit" [disabled]="complaintForm.invalid || isSubmitting">
+            <span *ngIf="!isSubmitting">Submit Complaint</span>
+            <span *ngIf="isSubmitting">Submitting...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- View Complaint Details Modal -->
+<div *ngIf="showDetailModal" class="modal-overlay" (click)="closeDetailModal()">
+  <div class="modal-container detail-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-section">
+        <h2>Complaint Details</h2>
+        <span class="status-badge" [class]="'status-' + selectedComplaint?.status">
+          {{ selectedComplaint?.status }}
+        </span>
+      </div>
+      <button class="close-btn" (click)="closeDetailModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="detail-section">
+        <span class="detail-label">Title</span>
+        <p class="detail-value">{{ selectedComplaint?.title }}</p>
+      </div>
+
+      <div class="detail-section">
+        <span class="detail-label">Category</span>
+        <span class="category-badge" [class]="'category-' + selectedComplaint?.category">
+          {{ selectedComplaint?.category }}
+        </span>
+      </div>
+
+      <div class="detail-section">
+        <span class="detail-label">Details</span>
+        <p class="detail-value">{{ selectedComplaint?.details }}</p>
+      </div>
+
+      <div *ngIf="selectedComplaint?.image" class="detail-section">
+        <span class="detail-label">Attached Image</span>
+        <img 
+          [src]="imageUrl + selectedComplaint?.image" 
+          [alt]="selectedComplaint?.title"
+          class="detail-image"
+          (click)="viewImage(selectedComplaint?.image || '')" 
+          *ngIf="selectedComplaint?.image"> 
+      </div>
+
+        <div *ngIf="selectedComplaint?.adminResponse" class="detail-section admin-response-detail">
+          <span class="detail-label">Admin Response</span>
+          <p class="detail-value response-text">{{ selectedComplaint?.adminResponse }}</p>
+        </div>  
+        
+
+      <div class="detail-section">
+        <span class="detail-label">Submitted On</span>
+        <p class="detail-value">{{ selectedComplaint?.createdAt | date:'full' }}</p>
+      </div>
+
+      <div *ngIf="selectedComplaint?.updatedAt !== selectedComplaint?.createdAt" class="detail-section">
+        <span class="detail-label">Last Updated</span>
+        <p class="detail-value">{{ selectedComplaint?.updatedAt | date:'full' }}</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,69 @@
+<div class="login-container">
+  <div class="login-wrapper">
+    <!-- OTP Verification Card -->
+    <div class="login-card">
+      <div class="login-header text-center">
+        <!-- Logo -->
+        <div class="logo-container mb-4">
+          <img src="assets/images/download.png" alt="Logo" class="logo">
+        </div>
+        
+        <!-- OTP Title -->
+        <h2 class="otp-title">OTP Verification</h2>
+        <p class="otp-subtitle">We've sent an OTP to your registered mobile number</p>
+      </div>
+
+      <!-- OTP Form -->
+      <div class="otp-form">
+        <div class="otp-inputs-container mb-4">
+          <div class="otp-inputs">
+            <input 
+              *ngFor="let digit of otp; let i = index"
+              type="text" 
+              [id]="'otp-' + i"
+              class="otp-input" 
+              maxlength="1"
+              [(ngModel)]="otp[i]"
+              (input)="onOtpInput($event, i)"
+              (keydown)="onOtpKeydown($event, i)"
+              [disabled]="isLoading"
+              autocomplete="off"
+              inputmode="numeric">
+          </div>
+        </div>
+
+        <button 
+          type="button" 
+          class="btn btn-verify w-100 mb-3"
+          (click)="verifyOtp()"
+          [disabled]="isLoading || !isOtpComplete()">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          {{ isLoading ? 'Verifying...' : 'Verify & Continue' }}
+        </button>
+
+        <!-- Resend OTP -->
+        <div class="resend-section text-center">
+          <p class="resend-text">
+            Didn't receive OTP? 
+            <button 
+              type="button" 
+              class="btn-link resend-link"
+              (click)="resendOtp()"
+              [disabled]="isResendLoading || resendCooldown > 0">
+              <span *ngIf="isResendLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+              {{ isResendLoading ? 'Sending...' : resendCooldown > 0 ? ('Resend in ' + resendCooldown + 's') : 'Resend OTP' }}
+            </button>
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="login-footer text-center mt-4">
+        <p class="copyright">
+          Copyright © 2025. All rights reserved by 
+          <span class="brand-text">Travel Nexus</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

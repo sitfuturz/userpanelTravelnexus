@@ -1,0 +1,155 @@
+<!-- Customer Login Container -->
+<div class="login-container">
+  <div class="login-wrapper">
+    <!-- Login Card -->
+    <div class="login-card">
+      <div class="login-header text-center">
+        <!-- Logo -->
+        <div class="logo-container mb-4">
+          <img src="assets/images/download.png" alt=" Logo" class="logo">
+        </div>
+        
+        <!-- Welcome Text -->
+        <h2 class="welcome-title">Welcome to Travel Nexus👋</h2>
+        <p class="welcome-subtitle">Start your journey with a single step<br>
+         Simplify your travel, maximize your adventure.</p>
+      </div>
+
+      <!-- Login Form -->
+      <div class="login-form">
+        <div class="form-group mb-4">
+          <label for="mobileNumber" class="form-label">Mobile Number</label>
+          <div class="mobile-input-group">
+            <div class="country-code">
+              <span>+91</span>
+            </div>
+            <input 
+              type="tel" 
+              id="mobileNumber"
+              class="form-control mobile-input" 
+              placeholder="Enter Mobile number"
+              [(ngModel)]="mobileNumber"
+              digitOnly
+              maxlength="10"
+              [disabled]="isLoading">
+          </div>
+        </div>
+
+        <button 
+          type="button" 
+          class="btn btn-login w-100"
+          (click)="sendOtp()"
+          [disabled]="isLoading || !mobileNumber">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          {{ isLoading ? 'Sending OTP...' : 'Log In' }}
+        </button>
+
+        <div class="text-center mt-3">
+          <button type="button" class="btn-link" (click)="openSignup()">Don't have an account? Sign Up</button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="login-footer text-center mt-4">
+        <p class="copyright">
+          Copyright © 2025. All rights reserved by 
+          <span class="brand-text">IT Futurz</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Signup Modal -->
+<div class="modal-overlay" *ngIf="showSignup" (click)="closeSignup()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Create your account</h3>
+      <button class="close-btn" (click)="closeSignup()">✕</button>
+    </div>
+    <form class="modal-body wizard" [formGroup]="signupForm" (ngSubmit)="onSubmitSignup()">
+      <div class="wizard-progress">
+        <div class="wizard-bar">
+          <div class="wizard-fill" [style.width.%]="getProgressPercent()"></div>
+        </div>
+        <div class="wizard-steps">
+          <span [class.active]="currentStep >= 1">1</span>
+          <span [class.active]="currentStep >= 2">2</span>
+          <span [class.active]="currentStep >= 3">3</span>
+          <span [class.active]="currentStep >= 4">4</span>
+          <span [class.active]="currentStep >= 5">5</span>
+          <span [class.active]="currentStep >= 6">6</span>
+          <span [class.active]="currentStep >= 7">✓</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Basic info -->
+      <div class="wizard-step" *ngIf="currentStep === 1">
+        <div class="form-row"><label>Full Name *</label><input type="text" formControlName="name" placeholder="Enter full name"></div>
+        <div class="form-row"><label>Mobile Number *</label><input type="tel" formControlName="mobile_number" placeholder="10-digit mobile" maxlength="10" digitOnly></div>
+        <div class="form-row"><label>Email *</label><input type="email" formControlName="email" placeholder="Enter email"></div>
+        <div class="form-row"><label>Date of Birth</label><input type="date" formControlName="date_of_birth"></div>
+      </div>
+
+      <!-- Step 2: Business -->
+      <div class="wizard-step" *ngIf="currentStep === 2">
+        <div class="form-row"><label>Business Name *</label><input type="text" formControlName="business_name" placeholder="Enter business name"></div>
+        <div class="form-row"><label>Business Type *</label><select formControlName="business_type"><option value="B2B">B2B</option><option value="B2C">B2C</option></select></div>
+      </div>
+
+      <!-- Step 3: Regions -->
+      <div class="wizard-step" *ngIf="currentStep === 3">
+        <div class="form-row"><label>Regions (Service Areas)</label></div>
+        <div class="checkbox-list">
+          <label class="checkbox-item" *ngFor="let r of availableRegions">
+            <input type="checkbox" [checked]="signupForm.value.regions?.includes(r._id)" (change)="toggleRegion(r._id, $event)">
+            <span>{{ r.name }} ({{ r.code }}) - {{ r.countries?.join(', ') }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Step 4: Location -->
+      <div class="wizard-step" *ngIf="currentStep === 4">
+        <div class="form-row"><label>Country *</label><select formControlName="country"><option value="" disabled>Select country</option><option *ngFor="let c of availableCountries" [value]="c.name">{{ c.name }}</option></select></div>
+        <div class="form-row"><label>State *</label><select formControlName="state"><option value="" disabled>Select state</option><option *ngFor="let s of availableStates" [value]="s.name">{{ s.name }}</option></select></div>
+        <div class="form-row"><label>City *</label><select formControlName="city"><option value="" disabled>Select city</option><option *ngFor="let c of availableCities" [value]="c.name">{{ c.name }}</option></select></div>
+      </div>
+
+      <!-- Step 5: DMC Specializations -->
+      <div class="wizard-step" *ngIf="currentStep === 5">
+        <div class="form-row"><label>DMC Specializations</label></div>
+        <div class="checkbox-list">
+          <label class="checkbox-item" *ngFor="let spec of specializations">
+            <input type="checkbox" [checked]="signupForm.value.dmc_specializations?.includes(spec)" (change)="toggleSpec(spec, $event)">
+            <span>{{ spec }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Step 6: Services Offered -->
+      <div class="wizard-step" *ngIf="currentStep === 6">
+        <div class="form-row"><label>Services Offered</label></div>
+        <div class="checkbox-list">
+          <label class="checkbox-item" *ngFor="let svc of servicesOffered">
+            <input type="checkbox" [checked]="signupForm.value.services_offered?.includes(svc)" (change)="toggleService(svc, $event)">
+            <span>{{ svc }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Step 7: Review -->
+      <div class="wizard-step" *ngIf="currentStep === 7">
+        <div class="review">
+          <h4>Review your details</h4>
+          <pre>{{ signupForm.value | json }}</pre>
+        </div>
+      </div>
+
+      <div class="wizard-actions">
+        <button type="button" class="btn btn-cancel" (click)="prevStep()" [disabled]="currentStep===1">Back</button>
+        <button type="button" class="btn btn-login" (click)="nextStep()" *ngIf="currentStep < totalSteps">Next</button>
+        <button type="submit" class="btn btn-login" *ngIf="currentStep === totalSteps">Create Account</button>
+      </div>
+    </form>
+  </div>
+</div>

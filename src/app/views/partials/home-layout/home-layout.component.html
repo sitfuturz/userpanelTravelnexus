@@ -1,0 +1,26 @@
+<!-- HTML Template -->
+<div class="admin-layout d-flex">
+  <!-- Sidebar - Always rendered, visibility controlled by CSS -->
+  <app-side-bar></app-side-bar>
+  
+  <!-- Main Content Area -->
+  <div class="main-content flex-grow-1" 
+       [class.sidebar-hidden]="!isSidebarOpen">
+    <!-- Header -->
+    <div class="header-container">
+      <app-header></app-header>
+    </div>
+    
+    <!-- Main Content -->
+    <main class="content-area">
+      <div class="content-wrapper p-3">
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+    
+    <!-- Footer -->
+    <div class="footer-container">
+      <app-footer></app-footer>
+    </div>
+  </div>
+</div>

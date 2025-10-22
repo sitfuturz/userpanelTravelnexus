@@ -1,0 +1,229 @@
+<div class="suggestion-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Feedback & Suggestions</h1>
+      <p class="page-subtitle">Share your ideas and suggestions to help us improve</p>
+    </div>
+    <button class="btn btn-primary" (click)="openSuggestionModal()">
+      <i class="fas fa-plus"></i>
+      Submit Suggestion
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading suggestions...</p>
+  </div>
+
+  <!-- Suggestions List -->
+  <div *ngIf="!isLoading" class="suggestions-content">
+    <!-- Empty State -->
+    <div *ngIf="suggestions.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-lightbulb"></i>
+      </div>
+      <h3>No Suggestions Yet</h3>
+      <p>Be the first to share your ideas and suggestions!</p>
+      <button class="btn btn-primary" (click)="openSuggestionModal()">
+        Submit Your First Suggestion
+      </button>
+    </div>
+
+    <!-- Suggestions Grid -->
+    <div *ngIf="suggestions.length > 0" class="suggestions-grid">
+      <div *ngFor="let suggestion of suggestions" class="suggestion-card" (click)="viewSuggestionDetails(suggestion)">
+        <div class="card-header">
+          <div class="suggestion-title">
+            <h3>{{ suggestion.title }}</h3>
+            <span class="suggestion-id">#{{ suggestion._id.slice(-6) }}</span>
+          </div>
+          <div class="suggestion-meta">
+            <span class="category-badge" [ngClass]="getCategoryClass(suggestion.category)">
+              {{ suggestion.category | titlecase }}
+            </span>
+            <span class="status-badge" [ngClass]="getStatusClass(suggestion.status)">
+              {{ suggestion.status | titlecase }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <p class="suggestion-details">{{ suggestion.details }}</p>
+        </div>
+        
+        <div class="card-footer">
+          <div class="suggestion-date">
+            <i class="fas fa-calendar"></i>
+            {{ suggestion.createdAt | date:'MMM dd, yyyy' }}
+          </div>
+          <div class="view-details">
+            <i class="fas fa-eye"></i>
+            View Details
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="suggestions.length > 0 && totalPages > 1" class="pagination-container">
+      <div class="pagination-info">
+        Showing {{ (currentPage - 1) * 10 + 1 }} to {{ getMinValue(currentPage * 10, totalDocs) }} of {{ totalDocs }} suggestions
+      </div>
+      <div class="pagination-controls">
+        <button 
+          class="btn btn-outline" 
+          [disabled]="!hasPrevPage" 
+          (click)="goToPage(currentPage - 1)">
+          <i class="fas fa-chevron-left"></i>
+          Previous
+        </button>
+        
+        <div class="page-numbers">
+          <button 
+            *ngFor="let page of getPageNumbers()" 
+            class="page-btn" 
+            [class.active]="page === currentPage"
+            (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        </div>
+        
+        <button 
+          class="btn btn-outline" 
+          [disabled]="!hasNextPage" 
+          (click)="goToPage(currentPage + 1)">
+          Next
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Submit Suggestion Modal -->
+<div *ngIf="showSuggestionModal" class="modal-overlay" (click)="closeSuggestionModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Submit New Suggestion</h2>
+      <button class="close-btn" (click)="closeSuggestionModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <form [formGroup]="suggestionForm" (ngSubmit)="onSubmitSuggestion()" class="modal-body">
+      <div class="form-group">
+        <label for="title">Title *</label>
+        <input 
+          type="text" 
+          id="title" 
+          formControlName="title" 
+          placeholder="Brief title for your suggestion"
+          [class.error]="suggestionForm.get('title')?.invalid && suggestionForm.get('title')?.touched">
+        <div *ngIf="suggestionForm.get('title')?.invalid && suggestionForm.get('title')?.touched" class="error-message">
+          <span *ngIf="suggestionForm.get('title')?.errors?.['required']">Title is required</span>
+          <span *ngIf="suggestionForm.get('title')?.errors?.['minlength']">Title must be at least 3 characters</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="category">Category *</label>
+        <select 
+          id="category" 
+          formControlName="category"
+          [class.error]="suggestionForm.get('category')?.invalid && suggestionForm.get('category')?.touched">
+          <option value="">Select a category</option>
+          <option value="general">General</option>
+          <option value="technical">Technical</option>
+          <option value="feature">Feature Request</option>
+          <option value="improvement">Improvement</option>
+          <option value="other">Other</option>
+        </select>
+        <div *ngIf="suggestionForm.get('category')?.invalid && suggestionForm.get('category')?.touched" class="error-message">
+          <span *ngIf="suggestionForm.get('category')?.errors?.['required']">Please select a category</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="details">Details *</label>
+        <textarea 
+          id="details" 
+          formControlName="details" 
+          rows="5" 
+          placeholder="Describe your suggestion in detail..."
+          [class.error]="suggestionForm.get('details')?.invalid && suggestionForm.get('details')?.touched"></textarea>
+        <div *ngIf="suggestionForm.get('details')?.invalid && suggestionForm.get('details')?.touched" class="error-message">
+          <span *ngIf="suggestionForm.get('details')?.errors?.['required']">Details are required</span>
+          <span *ngIf="suggestionForm.get('details')?.errors?.['minlength']">Details must be at least 10 characters</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeSuggestionModal()">
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-primary" 
+          [disabled]="isSubmitting || suggestionForm.invalid">
+          <span *ngIf="isSubmitting" class="spinner-small"></span>
+          {{ isSubmitting ? 'Submitting...' : 'Submit Suggestion' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Suggestion Details Modal -->
+<div *ngIf="showDetailModal" class="modal-overlay" (click)="closeDetailModal()">
+  <div class="modal-content details-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Suggestion Details</h2>
+      <button class="close-btn" (click)="closeDetailModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div *ngIf="selectedSuggestion" class="modal-body">
+      <div class="detail-section">
+        <span class="detail-label">Title</span>
+        <h3 class="detail-value">{{ selectedSuggestion.title }}</h3>
+      </div>
+
+      <div class="detail-section">
+        <span class="detail-label">Category</span>
+        <span class="category-badge" [ngClass]="getCategoryClass(selectedSuggestion.category)">
+          {{ selectedSuggestion.category | titlecase }}
+        </span>
+      </div>
+
+      <div class="detail-section">
+        <span class="detail-label">Status</span>
+        <span class="status-badge" [ngClass]="getStatusClass(selectedSuggestion.status)">
+          {{ selectedSuggestion.status | titlecase }}
+        </span>
+      </div>
+
+      <div class="detail-section">
+        <span class="detail-label">Details</span>
+        <p class="detail-value">{{ selectedSuggestion.details }}</p>
+      </div>
+
+      <div *ngIf="selectedSuggestion.adminResponse" class="detail-section admin-response-detail">
+        <span class="detail-label">Admin Response</span>
+        <p class="detail-value response-text">{{ selectedSuggestion.adminResponse }}</p>
+      </div>
+
+      <div class="detail-section">
+        <span class="detail-label">Submitted On</span>
+        <p class="detail-value">{{ selectedSuggestion.createdAt | date:'full' }}</p>
+      </div>
+
+      <div class="detail-section">
+        <span class="detail-label">Last Updated</span>
+        <p class="detail-value">{{ selectedSuggestion.updatedAt | date:'full' }}</p>
+      </div>
+    </div>
+  </div>
+</div>

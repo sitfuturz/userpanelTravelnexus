@@ -1,0 +1,73 @@
+.admin-layout {
+    height: 100vh; /* Fixed height instead of min-height */
+    overflow: hidden; /* Prevent body scroll */
+    
+    .sidebar-container {
+      z-index: 1000;
+      flex-shrink: 0;
+    }
+    
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      height: 100vh; /* Fixed height */
+      overflow: hidden; /* Prevent main content overflow */
+      
+      .header-container {
+        z-index: 999;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        flex-shrink: 0; /* Prevent header from shrinking */
+      }
+      
+      .content-area {
+        flex: 1; /* Take remaining space */
+        overflow-y: auto; /* Only vertical scrolling for content */
+        overflow-x: hidden; /* Hide horizontal overflow */
+        
+        .content-wrapper {
+          min-height: 100%; /* Ensure wrapper takes full height */
+          
+          @media (max-width: 575.98px) {
+            padding: 1rem !important;
+          }
+        }
+      }
+      
+      .footer-container {
+        flex-shrink: 0; /* Prevent footer from shrinking */
+      }
+    }
+}
+
+// Mobile specific adjustments
+@media (max-width: 991.98px) {
+    .admin-layout {
+      .main-content {
+        width: 100%;
+        
+        .header-container {
+          padding-left: 0;
+        }
+      }
+    }
+}
+
+// Desktop sidebar toggle adjustments
+@media (min-width: 992px) {
+    .admin-layout {
+      .main-content {
+        transition: margin-left 0.3s ease;
+        
+        // When sidebar is hidden, expand content to full width
+        &.sidebar-hidden {
+          margin-left: 0;
+        }
+        
+        // When sidebar is visible, add margin for sidebar width
+        &:not(.sidebar-hidden) {
+          margin-left: 280px;
+        }
+      }
+    }
+}

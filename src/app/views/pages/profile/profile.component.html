@@ -1,0 +1,568 @@
+<!-- profile.component.html - Updated Template -->
+<div class="profile-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading profile...</p>
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="!isLoading && userProfile" class="profile-content">
+    
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-header-content">
+        
+        <!-- Profile Picture Section -->
+        <div class="profile-picture-section">
+          <div class="profile-picture-container">
+            <img 
+              [src]="imageurl + getProfilePictureUrl()"
+              [alt]="userProfile.name"
+              class="profile-picture"
+              onerror="this.src='assets/images/placeholder-image.png'">
+            
+            <!-- Upload Button (Edit Mode) -->
+            <div class="upload-overlay" *ngIf="isEditMode">
+              <input 
+                type="file" 
+                id="profilePicUpload" 
+                accept="image/*"
+                (change)="onProfilePictureChange($event)"
+                style="display: none;">
+              <label for="profilePicUpload" class="upload-btn">
+                <i class="fas fa-camera"></i>
+              </label>
+            </div>
+          </div>
+          
+          <!-- User Info -->
+          <div class="user-info">
+            <h1 class="user-name">{{ userProfile.name }}</h1>
+            <p class="business-name" *ngIf="userProfile.business_name">
+              {{ userProfile.business_name }}
+            </p>
+            <div class="user-meta">
+              <span class="location-info">
+                <i class="fas fa-map-marker-alt"></i>
+                {{ userProfile.city }}, {{ userProfile.state }}, {{ userProfile.country }}
+              </span>
+            </div>
+            
+            <!-- Profile Completion -->
+            <div class="profile-completion">
+              <div class="completion-bar">
+                <div 
+                  class="completion-fill" 
+                  [style.width.%]="getProfileCompletionPercentage()">
+                </div>
+              </div>
+              <span class="completion-text">
+                Profile {{ getProfileCompletionPercentage() }}% complete
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button 
+            class="btn-edit" 
+            *ngIf="!isEditMode"
+            (click)="onEditSection('personal')">
+            <i class="fas fa-edit"></i>
+            Edit Profile
+          </button>
+          
+          <div class="edit-actions" *ngIf="isEditMode">
+            <button 
+              class="btn-save" 
+              (click)="onSaveSection()"
+              [disabled]="isUpdatingProfile">
+              <i class="fas fa-save"></i>
+              {{ isUpdatingProfile ? 'Saving...' : 'Save' }}
+            </button>
+            <button 
+              class="btn-cancel" 
+              (click)="onCancelEdit()"
+              [disabled]="isUpdatingProfile">
+              <i class="fas fa-times"></i>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Details Sections -->
+    <div class="profile-sections">
+      
+      <!-- Personal Details Section -->
+      <div class="section-container">
+        <div 
+          class="section-header" 
+          (click)="toggleSection('personal')"
+          [class.expanded]="isSectionExpanded('personal')">
+          <div class="section-title">
+            <i [class]="getSectionIcon('personal')"></i>
+            <span>Personal Details</span>
+          </div>
+          <i class="fas fa-chevron-down toggle-icon"></i>
+        </div>
+        
+        <div class="section-content" *ngIf="isSectionExpanded('personal')">
+          <!-- Edit Personal Details Button -->
+          <div class="section-actions" *ngIf="!isEditMode || editingSection !== 'personal'">
+            <button 
+              class="btn-edit-section" 
+              (click)="onEditSection('personal')">
+              <i class="fas fa-edit"></i>
+              Edit Personal Details
+            </button>
+          </div>
+          
+          <div class="details-grid" [formGroup]="personalForm">
+            <div class="detail-item">
+              <label class="detail-label">Name:</label>
+              <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'personal'">{{ userProfile.name }}</span>
+              <input 
+                type="text" 
+                class="detail-input" 
+                *ngIf="isEditMode && editingSection === 'personal'"
+                formControlName="name">
+            </div>
+            
+            <div class="detail-item">
+              <label class="detail-label">Email:</label>
+              <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'personal'">{{ userProfile.email }}</span>
+              <input 
+                type="email" 
+                class="detail-input" 
+                *ngIf="isEditMode && editingSection === 'personal'"
+                formControlName="email">
+            </div>
+            
+            <div class="detail-item">
+              <label class="detail-label">Mobile Number:</label>
+              <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'personal'">{{ formatPhoneNumber(userProfile.mobile_number) }}</span>
+              <input 
+                type="tel" 
+                class="detail-input" 
+                *ngIf="isEditMode && editingSection === 'personal'"
+                formControlName="mobile_number">
+            </div>
+            
+            <div class="detail-item">
+              <label class="detail-label">City:</label>
+              <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'personal'">{{ userProfile.city || 'Not provided' }}</span>
+              <input 
+                type="text" 
+                class="detail-input" 
+                *ngIf="isEditMode && editingSection === 'personal'"
+                formControlName="city">
+            </div>
+            
+            <div class="detail-item">
+              <label class="detail-label">State:</label>
+              <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'personal'">{{ userProfile.state || 'Not provided' }}</span>
+              <input 
+                type="text" 
+                class="detail-input" 
+                *ngIf="isEditMode && editingSection === 'personal'"
+                formControlName="state">
+            </div>
+            
+            <div class="detail-item">
+              <label class="detail-label">Country:</label>
+              <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'personal'">{{ userProfile.country || 'Not provided' }}</span>
+              <input 
+                type="text" 
+                class="detail-input" 
+                *ngIf="isEditMode && editingSection === 'personal'"
+                formControlName="country">
+            </div>
+            
+            <div class="detail-item">
+              <label class="detail-label">Date of Birth:</label>
+              <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'personal'">{{ formatDate(userProfile.date_of_birth) }}</span>
+              <input 
+                type="date" 
+                class="detail-input" 
+                *ngIf="isEditMode && editingSection === 'personal'"
+                formControlName="date_of_birth">
+            </div>
+            
+            <div class="detail-item full-width">
+              <label class="detail-label">Address:</label>
+              <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'personal'">{{ getFullAddress() || 'Not provided' }}</span>
+              <textarea 
+                class="detail-textarea" 
+                *ngIf="isEditMode && editingSection === 'personal'"
+                formControlName="address"
+                rows="3"
+                placeholder="Enter your address"></textarea>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Business Details Section -->
+      <div class="section-container">
+        <div 
+          class="section-header" 
+          (click)="toggleSection('business')"
+          [class.expanded]="isSectionExpanded('business')">
+          <div class="section-title">
+            <i [class]="getSectionIcon('business')"></i>
+            <span>Business Details</span>
+          </div>
+          <i class="fas fa-chevron-down toggle-icon"></i>
+        </div>
+        
+        <div class="section-content" *ngIf="isSectionExpanded('business')">
+          <!-- Edit Business Details Button -->
+          <div class="section-actions" *ngIf="!isEditMode || editingSection !== 'business'">
+            <button 
+              class="btn-edit-section" 
+              (click)="onEditSection('business')">
+              <i class="fas fa-edit"></i>
+              Edit Business Details
+            </button>
+          </div>
+          
+          <div class="business-details" *ngIf="getPrimaryBusiness(); else noBusiness">
+            <div class="details-grid" [formGroup]="businessForm">
+              <div class="detail-item">
+                <label class="detail-label">Business Name:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">{{ getPrimaryBusiness()?.business_name || 'Not provided' }}</span>
+                <input 
+                  type="text" 
+                  class="detail-input" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="business_name">
+              </div>
+              
+              <div class="detail-item">
+                <label class="detail-label">Business Type:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">{{ getPrimaryBusiness()?.business_type || 'Not specified' }}</span>
+                <select 
+                  class="detail-input" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="business_type">
+                  <option value="B2B">B2B</option>
+                  <option value="B2C">B2C</option>
+                </select>
+              </div>
+              
+              <div class="detail-item">
+                <label class="detail-label">Category:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">{{ getPrimaryBusiness()?.category || 'Not specified' }}</span>
+                <input 
+                  type="text" 
+                  class="detail-input" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="category">
+              </div>
+              
+              <div class="detail-item">
+                <label class="detail-label">Sub Category:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">{{ getPrimaryBusiness()?.sub_category || 'Not specified' }}</span>
+                <input 
+                  type="text" 
+                  class="detail-input" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="sub_category">
+              </div>
+              
+              <div class="detail-item">
+                <label class="detail-label">Team Size:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">{{ getPrimaryBusiness()?.team_size || 'Not specified' }}</span>
+                <input 
+                  type="number" 
+                  class="detail-input" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="team_size">
+              </div>
+              
+              <div class="detail-item">
+                <label class="detail-label">Establishment Year:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">{{ formatDate(getPrimaryBusiness()?.establishment) }}</span>
+                <input 
+                  type="date" 
+                  class="detail-input" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="establishment">
+              </div>
+              
+              <div class="detail-item">
+                <label class="detail-label">Business Email:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">{{ getPrimaryBusiness()?.email || 'Not provided' }}</span>
+                <input 
+                  type="email" 
+                  class="detail-input" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="email">
+              </div>
+              
+              <div class="detail-item">
+                <label class="detail-label">Business Mobile:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">{{ formatPhoneNumber(getPrimaryBusiness()?.mobile_number || '') }}</span>
+                <input 
+                  type="tel" 
+                  class="detail-input" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="mobile_number">
+              </div>
+              
+              <div class="detail-item">
+                <label class="detail-label">Website:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">
+                  <a 
+                    *ngIf="getPrimaryBusiness()?.website" 
+                    [href]="getPrimaryBusiness()?.website" 
+                    target="_blank" 
+                    class="link">
+                    {{ getPrimaryBusiness()?.website }}
+                  </a>
+                  <span *ngIf="!getPrimaryBusiness()?.website">Not provided</span>
+                </span>
+                <input 
+                  type="url" 
+                  class="detail-input" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="website">
+              </div>
+              
+              <div class="detail-item full-width">
+                <label class="detail-label">Business Address:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">{{ getPrimaryBusiness()?.address || 'Not provided' }}</span>
+                <textarea 
+                  class="detail-textarea" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="address"
+                  rows="3"
+                  placeholder="Enter business address"></textarea>
+              </div>
+              
+              <div class="detail-item full-width">
+                <label class="detail-label">About Business:</label>
+                <span class="detail-value" *ngIf="!isEditMode || editingSection !== 'business'">{{ getPrimaryBusiness()?.about_business_details || 'Not provided' }}</span>
+                <textarea 
+                  class="detail-textarea" 
+                  *ngIf="isEditMode && editingSection === 'business'"
+                  formControlName="about_business_details"
+                  rows="4"
+                  placeholder="Describe your business"></textarea>
+            </div>
+            </div>
+          </div>
+          
+          <ng-template #noBusiness>
+            <div class="empty-state">
+              <i class="fas fa-briefcase empty-icon"></i>
+              <h3>No Business Information</h3>
+              <p>Business details have not been added to this profile yet.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Services & Specializations Section -->
+      <div class="section-container">
+        <div 
+          class="section-header" 
+          (click)="toggleSection('services')"
+          [class.expanded]="isSectionExpanded('services')">
+          <div class="section-title">
+            <i [class]="getSectionIcon('services')"></i>
+            <span>Services & Specializations</span>
+          </div>
+          <i class="fas fa-chevron-down toggle-icon"></i>
+        </div>
+        
+        <div class="section-content" *ngIf="isSectionExpanded('services')">
+          <!-- Edit Services Button -->
+          <div class="section-actions" *ngIf="!isEditMode || editingSection !== 'services'">
+            <button 
+              class="btn-edit-section" 
+              (click)="onEditSection('services')">
+              <i class="fas fa-edit"></i>
+              Edit Services & Specializations
+            </button>
+          </div>
+          
+          <div class="details-grid" [formGroup]="servicesForm">
+            <div class="detail-item full-width">
+              <label class="detail-label">DMC Specializations:</label>
+              <div class="detail-value" *ngIf="!isEditMode || editingSection !== 'services'">
+                <div class="tags-container">
+                  <span 
+                    *ngFor="let spec of userProfile.dmc_specializations" 
+                    class="tag specialization-tag">
+                    {{ spec }}
+                  </span>
+                  <span *ngIf="!userProfile.dmc_specializations || userProfile.dmc_specializations.length === 0" class="no-data">
+                    Not specified
+                  </span>
+                </div>
+              </div>
+              <div class="multi-select-container" *ngIf="isEditMode && editingSection === 'services'">
+                <div class="checkbox-group">
+                  <label 
+                    *ngFor="let spec of availableSpecializations" 
+                    class="checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      [value]="spec"
+                      [checked]="(servicesForm.value?.dmc_specializations || []).includes(spec)"
+                      (change)="toggleSpecialization(spec)">
+                    {{ spec }}
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+            <div class="detail-item full-width">
+              <label class="detail-label">Services Offered:</label>
+              <div class="detail-value" *ngIf="!isEditMode || editingSection !== 'services'">
+                <div class="tags-container">
+                  <span 
+                    *ngFor="let service of userProfile.services_offered" 
+                    class="tag service-tag">
+                    {{ service }}
+                  </span>
+                  <span *ngIf="!userProfile.services_offered || userProfile.services_offered.length === 0" class="no-data">
+                    Not specified
+                  </span>
+                </div>
+              </div>
+              <div class="multi-select-container" *ngIf="isEditMode && editingSection === 'services'">
+                <div class="checkbox-group">
+                  <label 
+                    *ngFor="let service of availableServices" 
+                    class="checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      [value]="service"
+                      [checked]="(servicesForm.value?.services_offered || []).includes(service)"
+                      (change)="toggleService(service)">
+                    {{ service }}
+                  </label>
+                </div>
+              </div>
+            </div>
+            
+              <div class="detail-item full-width">
+                <label class="detail-label">Service Areas (Regions):</label>
+                <div class="detail-value" *ngIf="!isEditMode || editingSection !== 'services'">
+                  <div class="tags-container">
+                    <span 
+                      *ngFor="let region of userProfile.regions" 
+                      class="tag region-tag"
+                      [title]="region.countries?.length ? ('Countries: ' + region.countries.join(', ')) : ''">
+                      {{ region.name }} ({{ region.code }})
+                    </span>
+                    <span *ngIf="!userProfile.regions || userProfile.regions.length === 0" class="no-data">
+                      Not specified
+                    </span>
+                  </div>
+                </div>
+                <div class="multi-select-container" *ngIf="isEditMode && editingSection === 'services'">
+                  <div class="checkbox-group">
+                    <label class="checkbox-label" *ngFor="let region of availableRegions">
+                      <input 
+                        type="checkbox"
+                        [value]="region._id"
+                         [checked]="(servicesForm.value?.regions || []).includes(region._id)"
+                         (change)="onRegionToggle(region._id, $any($event.target).checked)">
+                      <span>{{ region.name }} ({{ region.code }}) - {{ region.countries?.join(', ') }}</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Social Media Links Section -->
+      <div class="section-container">
+        <div 
+          class="section-header" 
+          (click)="toggleSection('social')"
+          [class.expanded]="isSectionExpanded('social')">
+          <div class="section-title">
+            <i [class]="getSectionIcon('social')"></i>
+            <span>Social Media Links</span>
+          </div>
+          <i class="fas fa-chevron-down toggle-icon"></i>
+        </div>
+        
+        <div class="section-content" *ngIf="isSectionExpanded('social')">
+          <!-- Edit Social Media Button -->
+          <div class="section-actions" *ngIf="!isEditMode || editingSection !== 'social'">
+            <button 
+              class="btn-edit-section" 
+              (click)="onEditSection('social')">
+              <i class="fas fa-edit"></i>
+              Edit Social Media Links
+            </button>
+          </div>
+          
+          <div class="social-media-grid" *ngIf="getActiveSocialMediaLinks().length > 0 || (isEditMode && editingSection === 'social'); else noSocialMedia">
+            <div 
+              class="social-media-item" 
+              *ngFor="let link of getActiveSocialMediaLinks()">
+              <div class="social-platform">
+                <i [class]="getSocialMediaIcon(link.platform)"></i>
+                <span class="platform-name">{{ link.platform }}</span>
+              </div>
+              <a 
+                [href]="link.url" 
+                target="_blank" 
+                class="social-link"
+                (click)="openSocialMediaLink(link.url)">
+                {{ link.url }}
+              </a>
+            </div>
+            
+            <!-- Edit Mode Social Media Inputs -->
+            <div *ngIf="isEditMode && editingSection === 'social'" class="social-media-edit" [formGroup]="socialMediaForm">
+              <div class="social-input-group" *ngFor="let platform of ['Facebook', 'Instagram', 'LinkedIn', 'Twitter', 'YouTube', 'WhatsApp']">
+                <label class="social-label">
+                  <i [class]="getSocialMediaIcon(platform)"></i>
+                  {{ platform }}:
+                </label>
+                <input 
+                  type="url" 
+                  class="social-input"
+                  [formControlName]="platform"
+                  [placeholder]="'Enter ' + platform + ' URL'">
+              </div>
+            </div>
+          </div>
+          
+          <ng-template #noSocialMedia>
+            <div class="empty-state">
+              <i class="fas fa-share-alt empty-icon"></i>
+              <h3>No Social Media Links</h3>
+              <p>Social media links have not been added to this profile yet.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!isLoading && !userProfile" class="error-state">
+    <div class="error-icon">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <h2>Profile Not Found</h2>
+    <p>Unable to load profile information. Please try refreshing the page.</p>
+    <button class="btn-retry" (click)="loadUserProfile()">
+      <i class="fas fa-refresh"></i>
+      Retry
+    </button>
+  </div>
+</div>

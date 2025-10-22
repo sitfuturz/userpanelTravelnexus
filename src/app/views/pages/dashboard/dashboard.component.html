@@ -1,0 +1,273 @@
+<!-- dashboard.component.html - Updated without header section -->
+<div class="dashboard-container">
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading dashboard...</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!isLoading" class="dashboard-content">
+    <div class="content-wrapper">
+      <!-- Left Column -->
+      <div class="left-column">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <!-- Events Card -->
+          <div class="stat-card primary">
+            <div class="stat-header">
+              <h3>Events</h3>
+              <!-- <div class="stat-growth positive">
+                +11.01%
+                <i class="icon-trending-up"></i>
+              </div> -->
+            </div>
+            <div class="stat-value">{{ totalEventsCount }}</div>
+          </div>
+
+          <!-- Referrals Card -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <h3>Feeds</h3>
+              <!-- <div class="stat-growth negative">
+                -0.03%
+                <i class="icon-trending-down"></i>
+              </div> -->
+            </div>
+            <div class="stat-value">{{ dashboardData.referralGiven }}</div>
+          </div>
+
+          <!-- Event Registered Card -->
+          <div class="stat-card">
+            <div class="stat-header">
+              <h3>Event Registered</h3>
+            </div>
+            <div class="stat-value">{{ eventCounts.totalEvents }}</div>
+          </div>
+        </div>
+
+        <!-- Time Frame Filter -->
+        <!-- <div class="timeframe-filter">
+          <button class="timeframe-btn" 
+                  [class.active]="selectedTimeFilter === '6months'"
+                  (click)="onTimeFilterChange('6months')">
+            6 Months
+          </button>
+          <button class="timeframe-btn" 
+                  [class.active]="selectedTimeFilter === '12months'"
+                  (click)="onTimeFilterChange('12months')">
+            12 Months
+          </button>
+          <button class="timeframe-btn" 
+                  [class.active]="selectedTimeFilter === 'all'"
+                  (click)="onTimeFilterChange('all')">
+            Lifetime
+          </button>
+        </div> -->
+
+        <!-- Additional Stats -->
+        <!-- <div class="additional-stats">
+          <div class="stats-row">
+            <!-- <div class="stat-item">
+              <label>OTP Verification</label>
+              <div class="stat-value">{{ dashboardData.testimonial || 0 }}</div>
+            </div> -->
+            <!-- <div class="stat-item">
+              <label>Referrals Given</label>
+              <div class="stat-value">{{ dashboardData.referralGiven || 0}}</div>
+            </div>
+            <div class="stat-item">
+              <label>Referrals Received</label>
+              <div class="stat-value">{{ dashboardData.referralReceived || 0}}</div>
+            </div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-item">
+              <label>TYFCB Given</label>
+              <div class="stat-value">{{ dashboardData.tyfcbGiven || 0 }}</div>
+            </div>
+            <div class="stat-item">
+              <label>Revenue Received</label>
+              <div class="stat-value">{{ dashboardData.tyfcbReceived || 0 }}</div>
+            </div>  -->
+            <!-- <div class="stat-item">
+              <label>Visitors</label>
+              <div class="stat-value">{{ visitorCount || 0 }}</div>
+            </div> -->
+          <!-- </div>
+        </div> -->
+
+        <!-- Next Event -->
+        <div class="next-event-card">
+          <div class="event-header">
+            <h3>Next Event</h3>
+            <i class="icon-eye"></i>
+          </div>
+          
+          <div *ngIf="isLoadingEvent" class="loading-state">
+            <div class="spinner-border spinner-border-sm"></div>
+            Loading event...
+          </div>
+
+          <div *ngIf="!isLoadingEvent && nextEvent" class="event-content">
+            <div class="event-date">{{ formatDate(nextEvent.date) }}</div>
+            <div class="event-title">{{ nextEvent.name }}</div>
+            <div class="event-location">{{ nextEvent.location }}</div>
+            
+            <div class="visitor-list">
+              <div class="visitor-header">
+                <span>Visitor List</span>
+              </div>
+              <div class="visitor-count">{{ visitorCount }}</div>
+              <button class="visitor-btn" (click)="navigateToEvents()">Visitor</button>
+            </div>
+          </div>
+
+          <div *ngIf="!isLoadingEvent && !nextEvent" class="no-event">
+            <i class="icon-calendar"></i>
+            <p>No upcoming events</p>
+          </div>
+        </div>
+
+        <!-- Profile Optimization -->
+        <div class="profile-optimization-card">
+          <div class="optimization-header">
+            <h3>Profile Optimisation</h3>
+            <button class="update-btn" (click)="navigateToProfile()">Update</button>
+          </div>
+          
+          <div *ngIf="isLoadingProfile" class="loading-state">
+            <div class="spinner-border spinner-border-sm"></div>
+            Loading profile...
+          </div>
+
+          <div *ngIf="!isLoadingProfile" class="optimization-content">
+            <div class="progress-circle">
+              <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg"
+                      d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path class="circle"
+                      [attr.stroke-dasharray]="profileCompletion.profileCompletionPercentage + ', 100'"
+                      d="M18 2.0845
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <text x="18" y="20.35" class="percentage">{{ profileCompletion.profileCompletionPercentage }}%</text>
+              </svg>
+            </div>
+            <div class="optimization-tasks">
+              <p>Complete your profile to optimize your network</p>
+              <div class="task-list">
+                <!-- <div class="task-item">
+                  <div class="task-indicator completed">
+                    <div class="task-dot"></div>
+                  </div> -->
+                  <!-- <span class="task-text">Profile photo uploaded</span>
+                  <span class="task-percentage">80%</span> -->
+                <!-- </div> -->
+                <!-- <div class="task-item">
+                  <div class="task-indicator">
+                    <div class="task-dot"></div>
+                  </div> -->
+                  <!-- <span class="task-text">Complete your My Bio by filling Tags Profile</span>
+                  <span class="task-percentage">20%</span> -->
+                
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonials -->
+        <div class="testimonials-card">
+          <div class="testimonials-header">
+            <h3>Registered Events</h3>
+            <button class="view-all-btn" (click)="navigateToEventHistory()">View All</button>
+          </div>
+          
+          <div *ngIf="isLoadingTestimonials" class="loading-state">
+            <div class="spinner-border spinner-border-sm"></div>
+            Loading events...
+          </div>
+
+          <div *ngIf="!isLoadingTestimonials" class="testimonials-list">
+            <div *ngFor="let event of recentEvents" class="testimonial-item">
+              <img [src]="getEventImage(event)" 
+                   [alt]="event.title" class="testimonial-avatar" onerror="this.src='assets/images/placeholder-image.png'">
+                    
+              <div class="testimonial-info">
+                <div class="testimonial-name">{{ event.title }}</div>
+                <div class="testimonial-title">{{ formatDate(event.startDate) }}</div>
+              </div>
+              <div class="testimonial-time">  
+                <i class="icon-calendar"></i>
+                <span>{{ getLatestRegistrationStatus(event) }}</span>
+              </div>
+            </div>
+            
+            <div *ngIf="recentEvents.length === 0" class="no-testimonials">
+              <i class="icon-star"></i>
+              <p>No events registered</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="right-column">
+        <!-- Notifications -->
+        <div class="notifications-card">
+          <div class="notifications-header">
+            <h3>Notifications</h3>
+            <span class="recent-label">Recent</span>
+          </div>
+          
+          <div *ngIf="isLoadingNotifications" class="loading-state">
+            <div class="spinner-border spinner-border-sm"></div>
+            Loading notifications...
+          </div>
+
+          <div *ngIf="!isLoadingNotifications" class="notifications-list">
+            <div *ngFor="let notification of notifications" class="notification-item">
+              <img src="assets/images/placeholder-image.png" 
+                   alt="User" class="notification-avatar"
+                   onerror="this.src='assets/images/placeholder-image.png'">
+              <div class="notification-content">
+                <span class="notification-text">{{ notification.title }}</span>
+                <div class="notification-time">{{ formatTimeAgo(notification.createdAt) }}</div>
+              </div>
+            </div>
+            
+            <div *ngIf="notifications.length === 0" class="no-notifications">
+              <i class="icon-bell-off"></i>
+              <p>No recent notifications</p>
+            </div>
+
+            <!-- Other Section -->
+         
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions-card">
+          <h3>Quick Actions</h3>
+          <div class="quick-actions-list">
+            <button class="quick-action-item" (click)="navigateToEvents()">
+              <i class="action-icon icon-calendar"></i>
+              <span>Events</span>
+            </button>
+            <!-- <button class="quick-action-item" (click)="navigateToAttendance()">
+              <i class="action-icon icon-check-circle"></i>
+              <span>Attendance</span>
+            </button> -->
+          
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
