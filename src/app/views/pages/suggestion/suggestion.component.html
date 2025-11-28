@@ -1,14 +1,15 @@
 <div class="suggestion-container">
   <!-- Header Section -->
   <div class="page-header">
-    <div class="header-content">
-      <h1 class="page-title">Feedback & Suggestions</h1>
-      <p class="page-subtitle">Share your ideas and suggestions to help us improve</p>
+    <h1 class="page-title">Feedback & Suggestions</h1>
+    <div class="header-controls">
+      <button class="add-btn" (click)="openSuggestionModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Submit Suggestion
+      </button>
     </div>
-    <button class="btn btn-primary" (click)="openSuggestionModal()">
-      <i class="fas fa-plus"></i>
-      Submit Suggestion
-    </button>
   </div>
 
   <!-- Loading State -->
@@ -21,14 +22,9 @@
   <div *ngIf="!isLoading" class="suggestions-content">
     <!-- Empty State -->
     <div *ngIf="suggestions.length === 0" class="empty-state">
-      <div class="empty-icon">
-        <i class="fas fa-lightbulb"></i>
-      </div>
+      <div class="empty-icon">💡</div>
       <h3>No Suggestions Yet</h3>
-      <p>Be the first to share your ideas and suggestions!</p>
-      <button class="btn btn-primary" (click)="openSuggestionModal()">
-        Submit Your First Suggestion
-      </button>
+      <p>You haven't submitted any suggestions yet. Click "Submit Suggestion" to get started.</p>
     </div>
 
     <!-- Suggestions Grid -->
@@ -54,48 +50,41 @@
         </div>
         
         <div class="card-footer">
-          <div class="suggestion-date">
-            <i class="fas fa-calendar"></i>
+          <span class="suggestion-date">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
             {{ suggestion.createdAt | date:'MMM dd, yyyy' }}
-          </div>
-          <div class="view-details">
-            <i class="fas fa-eye"></i>
+          </span>
+          <button class="view-details" (click)="viewSuggestionDetails(suggestion); $event.stopPropagation()">
             View Details
-          </div>
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Pagination -->
     <div *ngIf="suggestions.length > 0 && totalPages > 1" class="pagination-container">
-      <div class="pagination-info">
-        Showing {{ (currentPage - 1) * 10 + 1 }} to {{ getMinValue(currentPage * 10, totalDocs) }} of {{ totalDocs }} suggestions
-      </div>
-      <div class="pagination-controls">
+      <div class="pagination">
         <button 
-          class="btn btn-outline" 
-          [disabled]="!hasPrevPage" 
+          class="pagination-btn" 
+          [disabled]="!hasPrevPage"
           (click)="goToPage(currentPage - 1)">
-          <i class="fas fa-chevron-left"></i>
-          Previous
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15,18 9,12 15,6"/>
+          </svg>
         </button>
-        
-        <div class="page-numbers">
-          <button 
-            *ngFor="let page of getPageNumbers()" 
-            class="page-btn" 
-            [class.active]="page === currentPage"
-            (click)="goToPage(page)">
-            {{ page }}
-          </button>
-        </div>
-        
+        <span class="pagination-info">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
         <button 
-          class="btn btn-outline" 
-          [disabled]="!hasNextPage" 
+          class="pagination-btn" 
+          [disabled]="!hasNextPage"
           (click)="goToPage(currentPage + 1)">
-          Next
-          <i class="fas fa-chevron-right"></i>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9,18 15,12 9,6"/>
+          </svg>
         </button>
       </div>
     </div>
@@ -108,67 +97,77 @@
     <div class="modal-header">
       <h2>Submit New Suggestion</h2>
       <button class="close-btn" (click)="closeSuggestionModal()">
-        <i class="fas fa-times"></i>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
       </button>
     </div>
     
-    <form [formGroup]="suggestionForm" (ngSubmit)="onSubmitSuggestion()" class="modal-body">
-      <div class="form-group">
-        <label for="title">Title *</label>
-        <input 
-          type="text" 
-          id="title" 
-          formControlName="title" 
-          placeholder="Brief title for your suggestion"
-          [class.error]="suggestionForm.get('title')?.invalid && suggestionForm.get('title')?.touched">
-        <div *ngIf="suggestionForm.get('title')?.invalid && suggestionForm.get('title')?.touched" class="error-message">
-          <span *ngIf="suggestionForm.get('title')?.errors?.['required']">Title is required</span>
-          <span *ngIf="suggestionForm.get('title')?.errors?.['minlength']">Title must be at least 3 characters</span>
+    <div class="modal-body">
+      <form [formGroup]="suggestionForm" (ngSubmit)="onSubmitSuggestion()">
+        
+        <div class="form-section">
+          <label class="form-label">
+            Title <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            formControlName="title" 
+            placeholder="Enter suggestion title"
+            class="form-input"
+            [class.error]="suggestionForm.get('title')?.invalid && suggestionForm.get('title')?.touched">
+          <div *ngIf="suggestionForm.get('title')?.invalid && suggestionForm.get('title')?.touched" class="error-text">
+            Title is required (minimum 3 characters)
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="category">Category *</label>
-        <select 
-          id="category" 
-          formControlName="category"
-          [class.error]="suggestionForm.get('category')?.invalid && suggestionForm.get('category')?.touched">
-          <option value="">Select a category</option>
-          <option value="general">General</option>
-          <option value="technical">Technical</option>
-          <option value="feature">Feature Request</option>
-          <option value="improvement">Improvement</option>
-          <option value="other">Other</option>
-        </select>
-        <div *ngIf="suggestionForm.get('category')?.invalid && suggestionForm.get('category')?.touched" class="error-message">
-          <span *ngIf="suggestionForm.get('category')?.errors?.['required']">Please select a category</span>
+        <div class="form-section">
+          <label class="form-label">
+            Category <span class="required">*</span>
+          </label>
+          <select 
+            formControlName="category" 
+            class="form-select"
+            [class.error]="suggestionForm.get('category')?.invalid && suggestionForm.get('category')?.touched">
+            <option value="">Select a category</option>
+            <option value="general">General</option>
+            <option value="technical">Technical</option>
+            <option value="feature">Feature Request</option>
+            <option value="improvement">Improvement</option>
+            <option value="other">Other</option>
+          </select>
+          <div *ngIf="suggestionForm.get('category')?.invalid && suggestionForm.get('category')?.touched" class="error-text">
+            Please select a category
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="details">Details *</label>
-        <textarea 
-          id="details" 
-          formControlName="details" 
-          rows="5" 
-          placeholder="Describe your suggestion in detail..."
-          [class.error]="suggestionForm.get('details')?.invalid && suggestionForm.get('details')?.touched"></textarea>
-        <div *ngIf="suggestionForm.get('details')?.invalid && suggestionForm.get('details')?.touched" class="error-message">
-          <span *ngIf="suggestionForm.get('details')?.errors?.['required']">Details are required</span>
-          <span *ngIf="suggestionForm.get('details')?.errors?.['minlength']">Details must be at least 10 characters</span>
+        <div class="form-section">
+          <label class="form-label">
+            Details <span class="required">*</span>
+          </label>
+          <textarea 
+            formControlName="details" 
+            placeholder="Describe your suggestion in detail..."
+            rows="5"
+            class="form-textarea"
+            [class.error]="suggestionForm.get('details')?.invalid && suggestionForm.get('details')?.touched">
+          </textarea>
+          <div *ngIf="suggestionForm.get('details')?.invalid && suggestionForm.get('details')?.touched" class="error-text">
+            Details are required (minimum 10 characters)
+          </div>
         </div>
-      </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeSuggestionModal()">
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" (click)="closeSuggestionModal()">
           Cancel
         </button>
         <button 
           type="submit" 
-          class="btn btn-primary" 
+          class="btn-submit" 
           [disabled]="isSubmitting || suggestionForm.invalid">
-          <span *ngIf="isSubmitting" class="spinner-small"></span>
-          {{ isSubmitting ? 'Submitting...' : 'Submit Suggestion' }}
+          <span *ngIf="!isSubmitting">Submit Suggestion</span>
+          <span *ngIf="isSubmitting">Submitting...</span>
         </button>
       </div>
     </form>
@@ -179,9 +178,17 @@
 <div *ngIf="showDetailModal" class="modal-overlay" (click)="closeDetailModal()">
   <div class="modal-content details-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Suggestion Details</h2>
+      <div class="modal-title-section">
+        <h2>Suggestion Details</h2>
+        <span class="status-badge" [ngClass]="getStatusClass(selectedSuggestion.status)" *ngIf="selectedSuggestion">
+          {{ selectedSuggestion.status | titlecase }}
+        </span>
+      </div>
       <button class="close-btn" (click)="closeDetailModal()">
-        <i class="fas fa-times"></i>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
       </button>
     </div>
     
@@ -198,12 +205,6 @@
         </span>
       </div>
 
-      <div class="detail-section">
-        <span class="detail-label">Status</span>
-        <span class="status-badge" [ngClass]="getStatusClass(selectedSuggestion.status)">
-          {{ selectedSuggestion.status | titlecase }}
-        </span>
-      </div>
 
       <div class="detail-section">
         <span class="detail-label">Details</span>

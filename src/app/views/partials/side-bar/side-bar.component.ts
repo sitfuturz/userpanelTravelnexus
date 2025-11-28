@@ -75,7 +75,10 @@ export class SideBarComponent implements OnInit, OnDestroy, AfterViewInit {
     'user-cog': 'fas fa-user-cog',
     'bell': 'fas fa-bell',
     'rss': 'fas fa-rss',
-    'trophy': 'fas fa-trophy'
+    'trophy': 'fas fa-trophy',
+    'event-history': 'fas fa-history',
+    'complaint': 'fas fa-exclamation-triangle',
+    'suggestion': 'fas fa-lightbulb'
   };
 
   ngOnInit() {
