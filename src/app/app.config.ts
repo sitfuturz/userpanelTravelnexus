@@ -20,7 +20,7 @@ export const appConfig: ApplicationConfig = {
     {
       provide: APP_BASE_HREF,
       useFactory: (platformLocation: PlatformLocation) => {
-        return platformLocation.getBaseHrefFromDOM() || '/adminapp/';
+        return platformLocation.getBaseHrefFromDOM() || '/userpanel/';
       },
       deps: [PlatformLocation]
     }
